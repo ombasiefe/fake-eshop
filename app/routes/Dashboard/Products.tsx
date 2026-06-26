@@ -92,7 +92,7 @@ const Products = (props: Props) => {
     //console.log("Products from db:", products)
     return (
         <section className="container px-4 mx-auto">
-            <div className="flex items-center gap-x-3">
+            <div className="flex items-center gap-x-4 justify-between">
                 <h2 className="text-lg font-medium text-gray-800 dark:text-white">
                     Products
                 </h2>
@@ -118,6 +118,7 @@ const Products = (props: Props) => {
                     </button>
 
                 </fetcher.Form>
+
             </div>
             <div className="flex flex-col mt-6">
                 <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">

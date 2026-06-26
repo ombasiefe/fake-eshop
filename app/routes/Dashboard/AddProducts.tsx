@@ -2,21 +2,45 @@ import React, { useState } from 'react'
 import { Form, redirect, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router'
 import { prisma } from '~/db.server'
 import { HiOutlineSave } from 'react-icons/hi';
-
+import path from 'path';
+import fs from "fs/promises"
 type Props = {}
 
 export async function action({ params, request }: ActionFunctionArgs) {
     const formData = await request.formData();
     const new_title = formData.get("title") as string;
-    const new_image = formData.get('image') as string;
     const new_price = Number(formData.get('price'));
     const new_visibility = formData.get('visibility') == "on" ? true : false as boolean;
     const new_description = formData.get('description') as string
     const new_category = formData.get('category') as string
-    console.log(new_visibility)
+    //Image extraction as file 
+    const new_image = formData.get('image') as File;
+    let dbImagePath = '/uploads/default-placeholder.png'
+
+    if (new_image && new_image.size > 0) {
+        const fileExtension = path.extname(new_image.name) || ".jpg"
+        const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}${fileExtension}`;
+
+        //Defining where the image will be stored
+        const uploadDir = path.join(process.cwd(), "public", "uploads");
+        const physicalFilePath = path.join(uploadDir, uniqueFileName)
+
+        //Reading the file in a node buffer stream and writing it to the disk
+        const arrayBuffer = await new_image.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer)
+        await fs.writeFile(physicalFilePath, buffer)
+
+        //getting the relative URL path that will be stored in DB 
+        dbImagePath = `/uploads/${uniqueFileName}`;
+        console.log(dbImagePath)
+
+    }
+
+
+    //console.log(new_visibility)
     const data = {
         title: new_title,
-        image: new_image,
+        image: dbImagePath,
         price: new_price,
         isActive: new_visibility,
         description: new_description,
@@ -41,24 +65,40 @@ export async function action({ params, request }: ActionFunctionArgs) {
 }
 function AddProduct({ }: Props) {
     const [image, setImage] = useState("")
+    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const localURL = URL.createObjectURL(file);
+            setImage(localURL)
+        } else {
+            setImage("")
+        }
+
+    }
 
     return (
         <div>
             <h1>Add Product</h1>
-            <Form method='post' reloadDocument >
+            <Form method='post' reloadDocument encType="multipart/form-data">
                 <div className='flex flex-col items-center w-full justify-around '  >
+
+
                     <label > Product Title:
                         <input
                             className='mx-2 border p-1 rounded-md' name='title'
                         />
                     </label>
                     <img className='w-70' src={image} />
+                    <div className='flex justify-between gap-2'>
+                        <label >Image :
+                            <input type='file'
+                                className='mx-2 w-max border p-1 rounded-md'
+                                name='image'
+                                onChange={handleImageChange}
+                                accept='image/*' />
 
-                    <label >Image URL:
-                        <input type='url'
-                            className='mx-2 w-max border p-1 rounded-md' name='image'
-                            onChange={(e) => { setImage(e.target.value) }} />
-                    </label>
+                        </label>
+                    </div>
                     <div>
 
                         <label > Price:
