@@ -43,7 +43,7 @@ function Products({ }: Props) {
         <div className='flex flex-col items-center justify-around'>
             <div className='flex justify-around flex-wrap gap-4 '>
                 {userPrducts.products?.map((prod) => (
-                    <div className='w-80 flex flex-col border p-2 items-center justify-around rounded-lg hover:rotate-1 '>
+                    <div key={prod.id} className='w-80 flex flex-col border p-2 items-center justify-around rounded-lg hover:rotate-1 '>
                         <h2 className='text-cente text-xl'>{prod.title}</h2>
                         <img src={prod.image} alt={prod.title} className='w-24' />
                         <p>{prod.description}</p>

@@ -1,8 +1,16 @@
-# Welcome to React Router!
+# Fake Eshop!
 
-A modern, production-ready template for building full-stack React applications using React Router.
+A website that has two views for two user types: visitor and admin. The visitor's side is like an eshop with product cards and product details. The admin's side has a dashboard with products and the admin has the ability of editing the products.
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## Tech Stack:
+- Node.js
+- 📡React-router
+- 🎨TailwindCss
+- 🔒TypeScript
+- React-icons
+- Prisma ORM 
+- 📊Mysql Database [XAMPP](https://www.apachefriends.org/download.html)
 
 ## Features
 
@@ -16,15 +24,48 @@ A modern, production-ready template for building full-stack React applications u
 
 ## Getting Started
 
+# Requirements:
+Make sure that you have already installed Node.js and Xampp. If you don't download from links below:
+* [Node.js](https://nodejs.org/) (v18 or higher recommended)
+* Mysql Database [XAMPP](https://www.apachefriends.org/download.html)
+
+# Step 1: Clone and install dependencies
+ 1) Open your terminal in VS Code inside your project root directory (`app\fake-eshop`).
+
 ### Installation
 
-Install the dependencies:
+2) Install the dependencies:
 
 ```bash
-npm install
+npm install 
 ```
 
-### Development
+## Step 2: Database configuration 
+1) Create a file named .env in your root folder if it doesn't exist yet.
+2) Add your MySQL connection string. Replace root, your password and fake_eshop_db with your actual database credentials. 
+
+```bash
+DATABASE_URL="mysql://root:your_password@localhost:3306/fake_eshop_db"
+```
+Your .env file should look like:
+```bash
+DATABASE_URL="mysql://root@localhost:3306/fake_eshop_db"
+DATABASE_USER="root" | your Database_username
+DATABASE_PASSWORD="" | your Database_password 
+DATABASE_HOST="localhost" |your host but in our case it will be localhost
+DATABASE_NAME="fake_eshop_db" |your Database_name
+DATABASE_PORT="3306" |your Port number, default is 3306
+``` 
+
+## Step 3: Run prisma Schema Migrations
+```bash
+npx prisma db push
+```
+
+```bash
+npx prisma generate
+```
+## Step 4: Development
 
 Start the development server with HMR:
 
