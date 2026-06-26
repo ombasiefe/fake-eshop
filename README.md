@@ -1,4 +1,4 @@
-# Fake Eshop!
+# Fake Eshop! 🛍️
 
 A website that has two views for two user types: visitor and admin. The visitor's side is like an eshop with product cards and product details. The admin's side has a dashboard with products and the admin has the ability of editing the products.
 
