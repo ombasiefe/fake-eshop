@@ -9,6 +9,7 @@ export default [
     layout("routes/Dashboard/AdminDashboard.tsx", [
         route("admin", "routes/Dashboard/Home.tsx"),
         route("admin/products", "routes/Dashboard/Products.tsx"),
+        route("admin/products/add_product", "routes/Dashboard/AddProducts.tsx"),
         route("admin/products/:id", "routes/Dashboard/EditProducts.tsx")
     ])
 
