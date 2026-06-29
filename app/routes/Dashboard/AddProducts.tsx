@@ -18,6 +18,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
     let dbImagePath = '/uploads/default-placeholder.png'
 
     if (new_image && new_image.size > 0) {
+        console.log(new_image.size)
         const fileExtension = path.extname(new_image.name) || ".jpg"
         const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}${fileExtension}`;
 
@@ -50,8 +51,9 @@ export async function action({ params, request }: ActionFunctionArgs) {
     try {
         console.log("Before upsert");
 
-        await prisma.products.create({
-            data: data
+        await prisma.products.createMany({
+            data: data,
+            skipDuplicates: true
         });
 
         console.log("After upsert");
