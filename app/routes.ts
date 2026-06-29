@@ -2,7 +2,7 @@ import { type RouteConfig, route, layout } from "@react-router/dev/routes";
 
 export default [
     layout("routes/Eshop/EshopMain.tsx", [
-        route("/", "routes/Eshop/home.tsx"),
+        route("/", "routes/Eshop/EshopHome.tsx"),
         route("/products", "routes/Eshop/Products.tsx"),
         route("/products/:id", "routes/Eshop/ProductDetails.tsx")
     ]),

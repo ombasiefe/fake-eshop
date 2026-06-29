@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
-import { Form, redirect, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router'
+import type { Route } from './+types/AddProducts';
+import { Form, redirect } from 'react-router'
 import { prisma } from '~/db.server'
 import { HiOutlineSave } from 'react-icons/hi';
 import path from 'path';
 import fs from "fs/promises"
 type Props = {}
 
-export async function action({ params, request }: ActionFunctionArgs) {
+export async function action({ params, request }: Route.ActionArgs) {
     const formData = await request.formData();
     const new_title = formData.get("title") as string;
     const new_price = Number(formData.get('price'));

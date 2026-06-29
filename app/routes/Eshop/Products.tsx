@@ -1,13 +1,14 @@
 import { error } from 'console'
 import React from 'react'
-import { redirect, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router'
+import type { Route } from './+types/Products'
+import { redirect } from 'react-router'
 import { prisma } from "~/db.server"
 import { Form } from 'react-router'
 import { FaShoppingBasket } from 'react-icons/fa'
 import { BsArrowDownRightCircle } from 'react-icons/bs'
 type Props = {}
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request }: Route.LoaderArgs) {
     try {
         const products = await prisma.products.findMany({
             where: { isActive: true }
@@ -22,7 +23,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         console.error("Error caused by: ", error)
     }
 }
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request }: Route.ActionArgs) {
     const formData = await request.formData();
     const actionType = formData.get('action') as string;
     const prodId = formData.get('prodId');
@@ -37,8 +38,8 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 }
 
-function Products({ }: Props) {
-    const userPrducts = useLoaderData<typeof loader>();
+function Products({ loaderData }: Route.ComponentProps) {
+    const userPrducts = loaderData;
     return (
         <div className='flex flex-col items-center justify-around'>
             <div className='flex justify-around flex-wrap gap-4 '>

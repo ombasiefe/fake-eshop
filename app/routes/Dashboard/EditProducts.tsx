@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
-import { Form, redirect, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router'
+import type { Route } from './+types/EditProducts';
+import { Form, redirect, useLoaderData } from 'react-router'
 import { prisma } from '~/db.server'
 import { HiOutlineSave } from 'react-icons/hi';
 import path from 'path';
 import fs from "fs/promises"
 
 type Props = {}
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
     const product_id = Number(params.id)
     console.log(product_id);
 
@@ -23,7 +24,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
         return { product_details: null }
     }
 }
-export async function action({ params, request }: ActionFunctionArgs) {
+export async function action({ params, request }: Route.ActionArgs) {
     const prod_Id = Number(params.id)
     const formData = await request.formData();
     const new_title = formData.get("title") as string;
@@ -86,10 +87,10 @@ export async function action({ params, request }: ActionFunctionArgs) {
     }
 
 }
-function EditProducts({ }: Props) {
+function EditProducts({ loaderData }: Route.ComponentProps) {
     const [image, setImage] = useState("");
 
-    const product_info = useLoaderData<typeof loader>();
+    const product_info = loaderData;
     const handle_image = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         console.log('file is:', file)
@@ -139,7 +140,7 @@ function EditProducts({ }: Props) {
                                 required
                             />
                         </label>
-                        <label > Visibility:
+                        <label > is Active:
                             <input type="checkbox" className='mx-2'
                                 defaultChecked={product_info.product_details?.isActive}
                                 name='visibility'

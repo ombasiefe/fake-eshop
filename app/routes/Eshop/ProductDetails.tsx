@@ -1,10 +1,10 @@
 import React from 'react'
-import { useLoaderData, type LoaderFunctionArgs } from 'react-router'
+import type { Route } from './+types/ProductDetails'
 import { prisma } from '~/db.server'
 import { FaShoppingBasket } from 'react-icons/fa'
 
 type Props = {}
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
     const prod_Id = Number(params.id);
 
     try {
@@ -20,8 +20,8 @@ export async function loader({ params }: LoaderFunctionArgs) {
     }
 }
 
-function ProductDetails({ }: Props) {
-    const prod_infos = useLoaderData<typeof loader>();
+function ProductDetails({ loaderData }: Route.ComponentProps) {
+    const prod_infos = loaderData
     return (
         <div className='text-center flex'>
             <img src={prod_infos.product_details?.image} alt={prod_infos.product_details?.title} />

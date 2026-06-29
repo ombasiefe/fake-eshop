@@ -1,18 +1,18 @@
-import { title } from 'process';
-import React from 'react'
-import { Form, redirect, useActionData, useFetcher, useLoaderData, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router'
+import React, { useState } from 'react'
+import type { Route } from './+types/Products';
+
+import { Form, redirect, useFetcher, } from 'react-router'
 import { prisma } from "~/db.server";
 
 type Props = {}
 
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request }: Route.LoaderArgs) {
     try {
         const Db_products = await prisma.products.findMany();
         if (Db_products.length == 0) {
             console.log("No products in DB");
         }
-
         return { products: Db_products || [] };
     } catch (e) {
         return { products: [] }
@@ -20,7 +20,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request }: Route.ActionArgs) {
     const formData = await request.formData();
     const actionType = formData.get("action");
     if (!actionType) {
@@ -54,6 +54,7 @@ export async function action({ request }: ActionFunctionArgs) {
             } catch (e) {
                 console.error("Product insert failed:", e)
             }
+            break
         case "edit_this_prod":
             try {
                 const product_id = Number(formData.get('prodId'))
@@ -62,7 +63,7 @@ export async function action({ request }: ActionFunctionArgs) {
                 return redirect(`${product_id}`)
             } catch (e) {
                 console.error("An error occur while trying to reach the edit product component", e)
-            }
+            } break
         case "delete_this_product":
             try {
                 const productId = Number(formData.get('prod_Id'));
@@ -78,20 +79,54 @@ export async function action({ request }: ActionFunctionArgs) {
                 console.error("An occur while trying to delete a product", e)
 
             }
-
-
+            break
     }
+
 }
 
 
 
-const Products = (props: Props) => {
-    const actionData = useActionData() as { error?: string } | undefined;
-    const products = useLoaderData<typeof loader>();
+const Products = ({ actionData, loaderData }: Route.ComponentProps) => {
+
+    const products = loaderData;
     const fetcher = useFetcher();
-    //console.log("Products from db:", products)
+    console.log("Products from db:", products)
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [selectedId, setSelectedId] = useState<number | null>(null)
     return (
         <section className="container px-4 mx-auto">
+            {confirmOpen && (
+                <div className='fixed inset-0 bg-transparent backdrop-blur-md flex items-center justify-center'>
+                    <div className='bg-gray-200 p-6 rounded-lg w-[300px]'>
+                        <h2 className='text-lg font-bold mb-4 text-black'>Confirm Delete</h2>
+
+                        <p className='mb-6 text-black'>Are you sure to delete this Product ?</p>
+                        <div className='flex justify-end gap-3'>
+                            <button
+                                onClick={() => setConfirmOpen(false)}
+                                className='px-3 py-1 bg-gray-300 rounded'
+                            >Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!selectedId) return
+                                    fetcher.submit(
+                                        {
+                                            action: "delete_this_product",
+                                            prod_Id: selectedId
+                                        },
+                                        { method: "post" })
+                                    setConfirmOpen(false);
+                                    setSelectedId(null)
+                                }}
+                                className="px-3 py-1 bg-red-600 text-white rounded">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div className="flex items-center gap-x-4 justify-between">
                 <h2 className="text-lg font-medium text-gray-800 dark:text-white">
                     Products
@@ -245,10 +280,17 @@ const Products = (props: Props) => {
                                                             </svg>
                                                         </button>
                                                     </fetcher.Form>
-                                                    <fetcher.Form method='post'>
-                                                        <input type="hidden" name="action" value="delete_this_product" />
+                                                    <fetcher.Form method='post' >
+
+
                                                         <button className="text-gray-500 transition-colors duration-200 dark:hover:text-red-500 dark:text-gray-300 hover:text-red-500 focus:outline-none"
-                                                            type="submit" name='prod_Id' value={prod.id} >
+                                                            type="button"
+                                                            onClick={() => {
+                                                                console.log("delete clicked")
+                                                                setSelectedId(prod.id);
+                                                                setConfirmOpen(true);
+                                                            }}
+                                                        >
                                                             <svg
                                                                 xmlns="http://www.w3.org/2000/svg"
                                                                 fill="none"
