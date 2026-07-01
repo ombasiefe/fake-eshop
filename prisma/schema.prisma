@@ -22,3 +22,9 @@ model categories {
   name     String     @unique
   products products[]
 }
+
+model User{
+  id Int @id @default(autoincrement())
+  email String @unique
+  password String 
+}

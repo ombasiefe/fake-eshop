@@ -1,6 +1,7 @@
 import React from 'react'
 import { AiOutlineProduct } from 'react-icons/ai'
 import { FiEdit } from 'react-icons/fi'
+import { Link } from 'react-router'
 
 type Props = {}
 
@@ -153,6 +154,9 @@ const Sidebar = (props: Props) => {
                     <span className="mx-2 font-medium text-gray-800 dark:text-gray-200">
                         John Doe
                     </span>
+                    <a className='bg-blue-800 text-white p-2 rounded-md border'
+                        href='/admin/logout'
+                    >Logout</a>
                 </a>
             </div>
         </aside>

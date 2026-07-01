@@ -12,7 +12,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
     const page = Number(url.searchParams.get("page")) || 1
     const tot_product = await prisma.products.count();
-    const totalPages = Math.ceil(tot_product / pageSize);
+    const totalPages = Math.max(1, Math.ceil(tot_product / pageSize));
 
     try {
         const Db_products = await prisma.products.findMany({

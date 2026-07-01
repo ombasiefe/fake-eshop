@@ -1,9 +1,19 @@
 import React from 'react'
 import { Form, type ActionFunctionArgs } from 'react-router'
 import Sidebar from './Sidebar';
-import { Outlet } from 'react-router';
+import { Outlet, redirect } from 'react-router';
+import { getSession } from '~/session.server';
+import type { Route } from './+types/AdminDashboard'
 type Props = {}
 
+export async function loader({ request }: Route.LoaderArgs) {
+    const sesion = await getSession(request.headers.get("Cookie"))
+    const userId = sesion.get("userId")
+    if (!userId) {
+        return redirect('/login');
+    }
+
+}
 export async function action({ request }: ActionFunctionArgs) {
     const formData = await request.formData();
     const actionType = formData.get("action")
