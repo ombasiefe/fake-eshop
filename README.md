@@ -55,6 +55,7 @@ DATABASE_PASSWORD="" | your Database_password
 DATABASE_HOST="localhost" |your host but in our case it will be localhost
 DATABASE_NAME="fake_eshop_db" |your Database_name
 DATABASE_PORT="3306" |your Port number, default is 3306
+Secret="This_is_the_secret"
 ``` 
 
 ## Step 3: Run prisma Schema Migrations
