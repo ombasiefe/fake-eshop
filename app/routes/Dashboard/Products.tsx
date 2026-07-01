@@ -1,21 +1,31 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/Products';
 
-import { Form, redirect, useFetcher, } from 'react-router'
+import { Form, Link, redirect, useFetcher, } from 'react-router'
 import { prisma } from "~/db.server";
 
 type Props = {}
 
 
 export async function loader({ request }: Route.LoaderArgs) {
+    const pageSize = 10;
+    const url = new URL(request.url)
+    const page = Number(url.searchParams.get("page")) || 1
+    const tot_product = await prisma.products.count();
+    const totalPages = Math.ceil(tot_product / pageSize);
+
     try {
-        const Db_products = await prisma.products.findMany();
+        const Db_products = await prisma.products.findMany({
+            include: { category: true },
+            skip: (page - 1) * pageSize,
+            take: pageSize
+        });
         if (Db_products.length == 0) {
             console.log("No products in DB");
         }
-        return { products: Db_products || [] };
+        return { products: Db_products, page, totalPages };
     } catch (e) {
-        return { products: [] }
+        return { products: [], page: 1, totalPages: 1 }
     }
 }
 
@@ -36,12 +46,25 @@ export async function action({ request }: Route.ActionArgs) {
                 }
                 const apiProducts = await response.json();
                 //console.log(apiProducts);
+                const category_names = [...new Set(apiProducts.map((prod: any) => prod.category))] as string[]
+
+                await prisma.categories.createMany({
+                    data: category_names.map(name => ({ name })),
+                    skipDuplicates: true
+                });
+                console.log("the category inserted")
+                const categories = await prisma.categories.findMany();
+
+                console.log(categories)
+
+
+                const categoryMap = Object.fromEntries(categories.map(c => [c.name, c.id]))
                 const transformedData = apiProducts.map((item: any) => ({
                     title: item.title,
                     description: item.description,
                     price: item.price,
                     image: item.image,
-                    category: item.category
+                    categoryId: categoryMap[item.category]
                 }))
                 // console.log("transfromed Data:", transformedData)
 
@@ -88,7 +111,7 @@ export async function action({ request }: Route.ActionArgs) {
 
 const Products = ({ actionData, loaderData }: Route.ComponentProps) => {
 
-    const products = loaderData;
+    const { products, totalPages, page } = loaderData;
     const fetcher = useFetcher();
     console.log("Products from db:", products)
     const [confirmOpen, setConfirmOpen] = useState(false);
@@ -132,7 +155,7 @@ const Products = ({ actionData, loaderData }: Route.ComponentProps) => {
                     Products
                 </h2>
                 <span className="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400">
-                    {products.products.length} Products
+                    {products.length} Products
                 </span>
                 <fetcher.Form method='post'>
                     <button className="flex items-center px-4 py-2 font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-blue-600 rounded-lg hover:bg-blue-500 focus:outline-none focus:ring focus:ring-blue-300 focus:ring-opacity-80"
@@ -206,9 +229,9 @@ const Products = ({ actionData, loaderData }: Route.ComponentProps) => {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
-                                    {products.products.length == 0 ? (
+                                    {products.length == 0 ? (
                                         <p>No products found</p>
-                                    ) : products.products.map((prod) => (
+                                    ) : products.map((prod) => (
                                         <tr key={prod.id}>
                                             <td className="px-4 py-4 text-sm font-medium text-gray-700 whitespace-nowrap">
                                                 <div className="inline-flex items-center gap-x-3">
@@ -254,7 +277,7 @@ const Products = ({ actionData, loaderData }: Route.ComponentProps) => {
                                             <td className="px-4 py-4 text-sm whitespace-nowrap">
                                                 <div className="flex items-center gap-x-2">
                                                     <p className="px-3 py-1 text-xs text-indigo-500 rounded-full dark:bg-gray-800 bg-indigo-100/60">
-                                                        {prod.category}
+                                                        {prod.category.name}
                                                     </p>
                                                 </div>
                                             </td>
@@ -280,9 +303,8 @@ const Products = ({ actionData, loaderData }: Route.ComponentProps) => {
                                                             </svg>
                                                         </button>
                                                     </fetcher.Form>
+
                                                     <fetcher.Form method='post' >
-
-
                                                         <button className="text-gray-500 transition-colors duration-200 dark:hover:text-red-500 dark:text-gray-300 hover:text-red-500 focus:outline-none"
                                                             type="button"
                                                             onClick={() => {
@@ -316,6 +338,18 @@ const Products = ({ actionData, loaderData }: Route.ComponentProps) => {
                         </div>
                     </div>
                 </div>
+            </div>
+            <div className='flex justify-center mt-2  gap-5 '>
+                <Link to={`?page=${page - 1}`}
+                    className='p-2 border rounded-md '
+                > Previous</Link>
+                {Array.from({ length: totalPages }, (_, index) => (
+                    <Link key={index}
+                        to={`?page=${index + 1}`}
+                        className='p-2 border rounded-md '>{index + 1}</Link>
+                ))}
+                <Link to={`?page=${page + 1}`}
+                    className='p-2 border rounded-md '>Next</Link>
             </div>
 
         </section >

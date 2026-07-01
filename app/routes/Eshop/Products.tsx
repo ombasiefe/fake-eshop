@@ -6,21 +6,29 @@ import { prisma } from "~/db.server"
 import { Form } from 'react-router'
 import { FaShoppingBasket } from 'react-icons/fa'
 import { BsArrowDownRightCircle } from 'react-icons/bs'
+import { Link } from 'react-router'
 type Props = {}
 
 export async function loader({ request }: Route.LoaderArgs) {
+    const pageSize = 9;
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get("page")) || 1
+    const tot_products = await prisma.products.count()
+    const tot_pages = Math.ceil(tot_products / pageSize);
     try {
-        const products = await prisma.products.findMany({
-            where: { isActive: true }
+        const Db_products = await prisma.products.findMany({
+            where: { isActive: true },
+            skip: (page - 1) * pageSize,
+            take: pageSize
         });
-        console.log(products)
-        if (products.length === 0) {
+        console.log(Db_products)
+        if (Db_products.length === 0) {
             console.error("No products Found")
         }
-        return { products }
+        return { products: Db_products, page, tot_pages }
     } catch (e) {
-        return { error: "Error while adding products" }
         console.error("Error caused by: ", error)
+        return { products: [], page: 1, tot_pages: 1 }
     }
 }
 export async function action({ request }: Route.ActionArgs) {
@@ -39,11 +47,11 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 function Products({ loaderData }: Route.ComponentProps) {
-    const userPrducts = loaderData;
+    const { products, tot_pages, page } = loaderData;
     return (
         <div className='flex flex-col items-center justify-around'>
             <div className='flex justify-around flex-wrap gap-4 '>
-                {userPrducts.products?.map((prod) => (
+                {products?.map((prod) => (
                     <div key={prod.id} className='w-80 flex flex-col border p-2 items-center justify-around rounded-lg hover:rotate-1 '>
                         <h2 className='text-cente text-xl'>{prod.title}</h2>
                         <img src={prod.image} alt={prod.title} className='w-24' />
@@ -73,7 +81,18 @@ function Products({ loaderData }: Route.ComponentProps) {
                 }
 
             </div>
-
+            <div className='flex justify-center mt-2  gap-5 '>
+                <Link to={`?page=${page - 1}`}
+                    className='p-2 border rounded-md '
+                > Previous</Link>
+                {Array.from({ length: tot_pages }, (_, index) => (
+                    <Link key={index}
+                        to={`?page=${index + 1}`}
+                        className='p-2 border rounded-md '>{index + 1}</Link>
+                ))}
+                <Link to={`?page=${page + 1}`}
+                    className='p-2 border rounded-md '>Next</Link>
+            </div>
         </div >
 
     )

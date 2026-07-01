@@ -7,13 +7,22 @@ import path from 'path';
 import fs from "fs/promises"
 type Props = {}
 
+export async function loader({ request }: Route.LoaderArgs) {
+    try {
+        const Db_categories = await prisma.categories.findMany();
+        return Db_categories
+    } catch (e) {
+        console.error("Error occured while trying to reach the categories", e);
+    }
+}
+
 export async function action({ params, request }: Route.ActionArgs) {
     const formData = await request.formData();
     const new_title = formData.get("title") as string;
     const new_price = Number(formData.get('price'));
     const new_visibility = formData.get('visibility') == "on" ? true : false as boolean;
     const new_description = formData.get('description') as string
-    const new_category = formData.get('category') as string
+    const new_category = Number(formData.get('category'))
     //Image extraction as file 
     const new_image = formData.get('image') as File;
     let dbImagePath = '/uploads/default-placeholder.png'
@@ -46,7 +55,7 @@ export async function action({ params, request }: Route.ActionArgs) {
         price: new_price,
         isActive: new_visibility,
         description: new_description,
-        category: new_category
+        categoryId: new_category
     }
     console.log(data)
     try {
@@ -66,7 +75,7 @@ export async function action({ params, request }: Route.ActionArgs) {
     }
 
 }
-function AddProduct({ }: Props) {
+function AddProduct({ loaderData }: Route.ComponentProps) {
     const [image, setImage] = useState("")
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -78,6 +87,7 @@ function AddProduct({ }: Props) {
         }
 
     }
+    const categories = loaderData
 
     return (
         <div>
@@ -130,8 +140,14 @@ function AddProduct({ }: Props) {
                         </textarea>
                     </label>
                     <label > Category:
-                        <input type="text"
-                            className='mx-2 p-1 border rounded-md' name='category' />
+                        <select className='border p-2 rounded-md' name='category'>
+                            {categories?.map((cat) => (
+                                <option key={cat.id}
+                                    className='bg-gray-700'
+                                    value={cat.id}
+                                >{cat.name}</option>
+                            ))}
+                        </select>
                     </label>
                     <button className="flex items-center px-4 mt-2 py-2 font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-blue-600 rounded-lg hover:bg-blue-500 focus:outline-none focus:ring focus:ring-blue-300 focus:ring-opacity-80"
                         type='submit' >

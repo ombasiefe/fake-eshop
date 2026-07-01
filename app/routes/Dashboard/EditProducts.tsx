@@ -12,13 +12,15 @@ export async function loader({ params }: Route.LoaderArgs) {
     console.log(product_id);
 
     try {
+        const Db_categories = await prisma.categories.findMany();
         const product_details = await prisma.products.findUnique({
-            where: { id: product_id }
+            where: { id: product_id },
+            include: { category: true }
         })
         if (!product_details) {
             console.error("Error fetching the product details from db")
         }
-        return { product_details }
+        return { product_details, Db_categories }
     } catch (e) {
         console.error(e);
         return { product_details: null }
@@ -32,7 +34,7 @@ export async function action({ params, request }: Route.ActionArgs) {
     const new_price = Number(formData.get('price'));
     const new_visibility = formData.get('visibility') == "on" ? true : false as boolean;
     const new_description = formData.get('description') as string
-    const new_category = formData.get('category') as string
+    const new_category = Number(formData.get('category'))
     console.log(new_visibility)
 
     const new_image = formData.get('image') as File;
@@ -66,7 +68,7 @@ export async function action({ params, request }: Route.ActionArgs) {
         price: new_price,
         isActive: new_visibility,
         description: new_description,
-        category: new_category
+        categoryId: new_category
     }
     console.log(data)
     try {
@@ -156,8 +158,14 @@ function EditProducts({ loaderData }: Route.ComponentProps) {
                         </textarea>
                     </label>
                     <label > Category:
-                        <input type="text" defaultValue={product_info.product_details?.category}
-                            className='mx-2 p-1 border rounded-md' name='category' />
+                        <select className='border p-2 rounded-md' name='category'>
+                            {product_info.Db_categories?.map((cat) => (
+                                <option key={cat.id}
+                                    className='bg-gray-700'
+                                    value={cat.id}
+                                >{cat.name}</option>
+                            ))}
+                        </select>
                     </label>
                     <button className="flex items-center px-4 mt-2 py-2 font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-blue-600 rounded-lg hover:bg-blue-500 focus:outline-none focus:ring focus:ring-blue-300 focus:ring-opacity-80"
                         type='submit' >
