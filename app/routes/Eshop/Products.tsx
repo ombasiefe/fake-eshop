@@ -1,5 +1,5 @@
 import { error } from 'console'
-import React from 'react'
+import React, { useState } from 'react'
 import type { Route } from './+types/Products'
 import { redirect } from 'react-router'
 import { prisma } from "~/db.server"
@@ -7,8 +7,15 @@ import { Form } from 'react-router'
 import { FaShoppingBasket } from 'react-icons/fa'
 import { BsArrowDownRightCircle } from 'react-icons/bs'
 import { Link } from 'react-router'
+import { useFetcher } from 'react-router'
 type Props = {}
-
+type CartItem = {
+    productId: number;
+    productTitle: string;
+    productImage: string;
+    productPrice: number;
+    quantity: number;
+};
 export async function loader({ request }: Route.LoaderArgs) {
     const pageSize = 9;
     const url = new URL(request.url);
@@ -21,7 +28,7 @@ export async function loader({ request }: Route.LoaderArgs) {
             skip: (page - 1) * pageSize,
             take: pageSize
         });
-        console.log(Db_products)
+        //console.log(Db_products)
         if (Db_products.length === 0) {
             console.error("No products Found")
         }
@@ -38,16 +45,38 @@ export async function action({ request }: Route.ActionArgs) {
     switch (actionType) {
         case "see_details":
             try {
-                console.log("product:", prodId)
+                // console.log("product:", prodId)
                 return redirect(`/products/${prodId}`)
             } catch (e) {
                 console.error("Could not redirect to product details page:", e)
             }
+            break;
+
+
     }
 }
 
 function Products({ loaderData }: Route.ComponentProps) {
     const { products, tot_pages, page } = loaderData;
+    function addToCart(prodId: number, prodName: string, prodImage: string, prodPrice: number) {
+
+        const cart: CartItem[] = JSON.parse(localStorage.getItem("cart") || "[]");
+        const existinItem = cart.find(
+            item => item.productId === prodId
+        )
+        if (!existinItem) {
+            cart.push({
+                productImage: prodImage,
+                productId: prodId,
+                productTitle: prodName,
+                productPrice: prodPrice,
+                quantity: 1,
+            })
+            console.log(cart)
+            localStorage.setItem("cart", JSON.stringify(cart))
+        }
+
+    }
     return (
         <div className='flex flex-col items-center justify-around'>
             <div className='flex justify-around flex-wrap gap-4 '>
@@ -63,8 +92,13 @@ function Products({ loaderData }: Route.ComponentProps) {
                                     className='mx-4 border p-1.5 rounded-xl bg-black hover:bg-white hover:text-black cursor-pointer'>
                                     <div className='flex '>
 
-                                        <FaShoppingBasket className='text-xl' />
-                                        <span className='mx-1'>Add to cart</span>
+                                        <input type="hidden" name='action' value='add_this_to_cart' />
+                                        <button className='flex'
+                                            type='submit'
+                                            name='productId' onClick={() => addToCart(prod.id, prod.title, prod.image, prod.price)}>
+                                            <FaShoppingBasket className='text-xl' />
+                                            <span className='mx-1'>Add to cart</span>
+                                        </button>
 
                                     </div>
                                 </button>

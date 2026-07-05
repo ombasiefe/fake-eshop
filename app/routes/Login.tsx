@@ -40,11 +40,17 @@ export async function action({ request }: Route.ActionArgs) {
         } else {
             const session = await getSession(request.headers.get("Cookie"));
             session.set("userId", String(Db_user.id))
-            return redirect("/admin", {
+            if (Db_user.isAdmin)
+                return redirect("/admin", {
+                    headers: {
+                        "Set-Cookie": await commitSession(session)
+                    }
+                });
+            return redirect('/order-form', {
                 headers: {
                     "Set-Cookie": await commitSession(session)
                 }
-            });
+            })
         }
 
     } catch (error) {

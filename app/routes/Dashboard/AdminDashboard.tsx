@@ -21,7 +21,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 
 
-function AdminDashboard({ }: Props) {
+function AdminDashboard({ loaderData }: Route.ComponentProps) {
     return (
         <div className="flex h-screen w-screen overflow-hidden">
 
