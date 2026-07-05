@@ -29,3 +29,4 @@ model User{
   password String
   isAdmin Boolean @default(false)
 }
+

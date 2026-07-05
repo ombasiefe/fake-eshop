@@ -17,9 +17,9 @@ function Navbar({ }: Props) {
         window.addEventListener("cartUpdated", updatedCount)
 
         return () => {
-            window.removeEventListener("cartUPdated", updatedCount)
+            window.removeEventListener("cartUpdated", updatedCount)
         }
-    })
+    }, [])
 
     return (
         <>

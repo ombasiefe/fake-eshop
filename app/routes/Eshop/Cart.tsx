@@ -34,6 +34,7 @@ function Cart({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
     function syncCart(updated: CartItem[]) {
         setCartItems(updated);
         localStorage.setItem("cart", JSON.stringify(updated));
+        window.dispatchEvent(new Event("cartUpdated"));
     }
 
     function increase(id: number) {

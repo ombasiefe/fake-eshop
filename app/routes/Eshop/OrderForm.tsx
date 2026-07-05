@@ -45,6 +45,7 @@ export async function action({ request }: Route.ActionArgs) {
             Email: ${email}
             Phone: ${phone}`
         })
+        return redirect("/products")
     } catch (eror) {
 
         console.error("Error while sending the email:", eror)

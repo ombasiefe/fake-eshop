@@ -8,6 +8,7 @@ import { FaShoppingBasket } from 'react-icons/fa'
 import { BsArrowDownRightCircle } from 'react-icons/bs'
 import { Link } from 'react-router'
 import { useFetcher } from 'react-router'
+import Cart from './Cart'
 type Props = {}
 type CartItem = {
     productId: number;
@@ -17,11 +18,16 @@ type CartItem = {
     quantity: number;
 };
 export async function loader({ request }: Route.LoaderArgs) {
-    const pageSize = 9;
+    const pageSize = 6;
     const url = new URL(request.url);
     const page = Number(url.searchParams.get("page")) || 1
-    const tot_products = await prisma.products.count()
+    const tot_products = await prisma.products.count({
+        where: {
+            isActive: true
+        }
+    })
     const tot_pages = Math.max(1, Math.ceil(tot_products / pageSize));
+    console.log(tot_pages)
     try {
         const Db_products = await prisma.products.findMany({
             where: { isActive: true },
@@ -74,61 +80,75 @@ function Products({ loaderData }: Route.ComponentProps) {
             })
             console.log(cart)
             localStorage.setItem("cart", JSON.stringify(cart))
+            window.dispatchEvent(new Event("cartUpdated"))
         }
 
     }
+    const [isCartOpen, setIsCartOpen] = useState(false);
+
     return (
-        <div className='flex flex-col items-center justify-around'>
-            <div className='flex justify-around flex-wrap gap-4 '>
-                {products?.map((prod) => (
-                    <div key={prod.id} className='w-80 flex flex-col border p-2 items-center justify-around rounded-lg hover:rotate-1 '>
-                        <h2 className='text-cente text-xl'>{prod.title}</h2>
-                        <img src={prod.image} alt={prod.title} className='w-24' />
-                        <p>{prod.description}</p>
-                        <div className='flex items-center justify-between'>
-                            <span className='text-2xl'>{prod.price.toFixed(2)}€</span>
-                            <div className='flex '>
-                                <button type='submit'
-                                    className='mx-4 border p-1.5 rounded-xl bg-black hover:bg-white hover:text-black cursor-pointer'>
-                                    <div className='flex '>
+        <>
+            <div className='flex flex-col items-center justify-around'>
+                <div className='flex justify-around flex-wrap gap-4 '>
+                    {products?.map((prod) => (
+                        <div key={prod.id} className='w-80 flex flex-col border p-2 items-center justify-around rounded-lg hover:rotate-1 '>
+                            <h2 className='text-cente text-xl'>{prod.title}</h2>
+                            <img src={prod.image} alt={prod.title} className='w-24' />
+                            <p>{prod.description}</p>
+                            <div className='flex items-center justify-between'>
+                                <span className='text-2xl'>{prod.price.toFixed(2)}€</span>
+                                <div className='flex '>
+                                    <button type='submit'
+                                        className='mx-4 border p-1.5 rounded-xl bg-black hover:bg-white hover:text-black cursor-pointer'>
+                                        <div className='flex '>
 
-                                        <input type="hidden" name='action' value='add_this_to_cart' />
-                                        <button className='flex'
-                                            type='submit'
-                                            name='productId' onClick={() => addToCart(prod.id, prod.title, prod.image, prod.price)}>
-                                            <FaShoppingBasket className='text-xl' />
-                                            <span className='mx-1'>Add to cart</span>
-                                        </button>
+                                            <input type="hidden" name='action' value='add_this_to_cart' />
+                                            <button className='flex'
+                                                type='submit'
+                                                name='productId' onClick={() => {
+                                                    addToCart(prod.id, prod.title, prod.image, prod.price);
+                                                    setIsCartOpen(true)
+                                                }}>
+                                                <FaShoppingBasket className='text-xl' />
+                                                <span className='mx-1'>Add to cart</span>
+                                            </button>
 
-                                    </div>
-                                </button>
-                                <Form method='post'>
-                                    <input type="hidden" name='action' value="see_details" />
-                                    <button type='submit' name='prodId' value={prod.id} className='cursor-pointer'>
-                                        <BsArrowDownRightCircle className='text-2xl ' /></button>
-                                </Form>
+                                        </div>
+                                    </button>
+                                    <Form method='post'>
+                                        <input type="hidden" name='action' value="see_details" />
+                                        <button type='submit' name='prodId' value={prod.id} className='cursor-pointer'>
+                                            <BsArrowDownRightCircle className='text-2xl ' /></button>
+                                    </Form>
+                                </div>
+
                             </div>
-
                         </div>
-                    </div>
-                ))
-                }
+                    ))
+                    }
 
-            </div>
-            <div className='flex justify-center mt-2  gap-5 '>
-                <Link to={`?page=${page - 1}`}
-                    className='p-2 border rounded-md '
-                > Previous</Link>
-                {Array.from({ length: tot_pages }, (_, index) => (
-                    <Link key={index}
-                        to={`?page=${index + 1}`}
-                        className='p-2 border rounded-md '>{index + 1}</Link>
-                ))}
-                <Link to={`?page=${page + 1}`}
-                    className='p-2 border rounded-md '>Next</Link>
-            </div>
-        </div >
+                </div>
+                <div className='flex justify-center mt-2  gap-5 '>
+                    {page > 1 ? (
+                        <Link to={`?page=${page - 1}`}
+                            className='p-2 border rounded-md '
+                        > Previous</Link>
+                    ) : (<span> </span>)}
 
+                    {Array.from({ length: tot_pages }, (_, index) => (
+                        <Link key={index}
+                            to={`?page=${index + 1}`}
+                            className='p-2 border rounded-md '>{index + 1}</Link>
+                    ))}
+                    {page < tot_pages ? (
+                        <Link to={`?page=${page + 1}`}
+                            className='p-2 border rounded-md '>Next</Link>
+                    ) : (<span></span>)}
+                </div>
+
+            </div >
+            <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+        </>
     )
 }
 
