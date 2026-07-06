@@ -42,11 +42,11 @@ function Orders({ loaderData }: Route.ComponentProps) {
                 orders?.map((order) => (
                     <div className='border w-[350px] p-10 rounded-md flex-wrap' key={order.id}>
                         <h2 className='text-xl'>Order {order?.id}</h2>
-                        <span>{order?.createdAt.toLocaleDateString()}  {order?.createdAt.toLocaleTimeString()}</span>
+                        <span>{order?.createdAt.toLocaleDateString("en-GB")}  {order?.createdAt.toLocaleTimeString("en-GB")}</span>
 
 
                         {order.items.map((order_item) => (
-                            <div>
+                            <div key={order_item.id}>
                                 <h3>{order_item.product.title}</h3>
                                 <img src={order_item.product.image} alt={order_item.product.title} className='h-30' />
                                 <div className='flex gap-4 text-lg items-center'>

@@ -106,21 +106,23 @@ function Products({ loaderData }: Route.ComponentProps) {
                             <p>{prod.description}</p>
                             <div className='flex items-center justify-between'>
                                 <span className='text-2xl'>{prod.price.toFixed(2)}€</span>
-                                <div className='flex '>
+                                <div className='flex items-center'>
                                     <button type='submit'
-                                        className='mx-4 border p-1.5 rounded-xl bg-black hover:bg-white hover:text-black cursor-pointer'>
+                                        className='mx-4 border p-1.5 rounded-xl bg-black hover:bg-white hover:text-black cursor-pointer'
+                                        name='productId' onClick={() => {
+                                            addToCart(prod.id, prod.title, prod.image, prod.price);
+                                            setIsCartOpen(true)
+                                        }}>
+
                                         <div className='flex '>
 
                                             <input type="hidden" name='action' value='add_this_to_cart' />
-                                            <button className='flex'
-                                                type='submit'
-                                                name='productId' onClick={() => {
-                                                    addToCart(prod.id, prod.title, prod.image, prod.price);
-                                                    setIsCartOpen(true)
-                                                }}>
+                                            <div className='flex'
+
+                                            >
                                                 <FaShoppingBasket className='text-xl' />
                                                 <span className='mx-1'>Add to cart</span>
-                                            </button>
+                                            </div>
 
                                         </div>
                                     </button>
