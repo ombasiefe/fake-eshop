@@ -15,6 +15,7 @@ model products {
   isActive    Boolean    @default(false)
   categoryId  Int
   category    categories @relation(fields: [categoryId], references: [id])
+  orderItem OrderItem[]
 }
 
 model categories {
@@ -28,5 +29,30 @@ model User{
   email String @unique
   password String
   isAdmin Boolean @default(false)
+  orders Order[]
 }
 
+model Order{
+  id Int @id @default(autoincrement())
+  email String 
+  tel String
+  userId Int
+  user User @relation(fields:[userId],references:[id])
+  address String
+  firstName String 
+  lastName String 
+  postalCode String 
+  items OrderItem[]
+  createdAt DateTime @default(now())
+}
+
+model OrderItem{
+  id Int @id @default(autoincrement())
+  orderId Int
+  order Order @relation(fields:[orderId],references:[id])
+  productId Int
+  product products @relation(fields:[productId],references:[id])
+
+quantity Int
+price Float @db.Double
+}

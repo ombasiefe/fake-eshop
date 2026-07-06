@@ -19,7 +19,7 @@ function Navbar({ }: Props) {
         return () => {
             window.removeEventListener("cartUpdated", updatedCount)
         }
-    }, [])
+    },)
 
     return (
         <>

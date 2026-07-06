@@ -6,6 +6,7 @@ import type { Route } from './+types/OrderForm';
 import { Resend } from 'resend';
 import { getSession } from '~/session.server';
 import { redirect } from 'react-router';
+import { prisma } from '~/db.server';
 export
     type Props = {}
 type CartItem = {
@@ -30,40 +31,218 @@ export async function action({ request }: Route.ActionArgs) {
     const first_name = formData.get('first_name') as string;
     const last_name = formData.get('last_name') as string;
     const phone = String(formData.get('phone'));
-    console.log(email, first_name, last_name, phone)
+    const address = formData.get("address") as string;
+    const postal_code = formData.get("postal_code") as string
+    const total_price = formData.get("total_price") as string
+    const cart = JSON.parse(formData.get("cart") as string) as CartItem[]
+    //console.log(email, first_name, last_name, phone, total_price)
     const resend = new Resend(process.env.RESEND_API_KEY)
+    const session = await getSession(request.headers.get('Cookie'));
+    const userId = Number(session.get('userId'))
     try {
-        const result = await resend.emails.send({
+        const new_order = await prisma.order.create({
+            data: {
+                email,
+                tel: phone,
+                userId: userId,
+                address,
+                firstName: first_name,
+                lastName: last_name,
+                postalCode: postal_code,
+                items: {
+                    create: cart.map(item => ({
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        price: item.productPrice
+                    }))
+                }
+            }
+        })
+        if (new_order) {
+            console.log('New order added successfully !')
+        }
+        const productRows = cart
+            .map(
+                (item) => `
+      <tr>
+        <td>${item.productTitle}</td>
+        <td style="text-align:center;">${item.quantity}</td>
+        <td style="text-align:right;">€${item.productPrice.toFixed(2)}</td>
+        <td style="text-align:right;">€${(item.productPrice * item.quantity).toFixed(2)}</td>
+      </tr>
+    `
+            )
+            .join("");
+        await resend.emails.send({
             from: "onboarding@resend.dev",
             to: "efe127652@gmail.com",
-            subject: 'Your New Order',
-            text: `
-            New order received!
+            subject: `🛒 New Order from ${first_name} ${last_name}`,
+            html: `
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{
+    font-family:Arial,sans-serif;
+    background:#f4f4f4;
+    padding:30px;
+}
 
-            Customer Details:
-            Name: ${first_name}
-            Email: ${email}
-            Phone: ${phone}`
-        })
-        return redirect("/products")
+.container{
+    max-width:700px;
+    margin:auto;
+    background:#fff;
+    border-radius:10px;
+    padding:30px;
+    box-shadow:0 3px 10px rgba(0,0,0,.1);
+}
+
+h1{
+    color:#2563eb;
+    margin-bottom:25px;
+}
+
+.section{
+    margin-bottom:25px;
+}
+
+.info-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.info-table td{
+    padding:8px;
+    border-bottom:1px solid #eee;
+}
+
+.products{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+}
+
+.products th{
+    background:#2563eb;
+    color:white;
+    padding:10px;
+}
+
+.products td{
+    padding:10px;
+    border-bottom:1px solid #ddd;
+}
+
+.total{
+    margin-top:25px;
+    text-align:right;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.footer{
+    margin-top:30px;
+    color:#777;
+    font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🛒 New Order Received</h1>
+
+<div class="section">
+
+<h2>Customer Details</h2>
+
+<table class="info-table">
+<tr>
+<td><strong>Name</strong></td>
+<td>${first_name} ${last_name}</td>
+</tr>
+
+<tr>
+<td><strong>Email</strong></td>
+<td>${email}</td>
+</tr>
+
+<tr>
+<td><strong>Phone</strong></td>
+<td>${phone}</td>
+</tr>
+
+<tr>
+<td><strong>Address</strong></td>
+<td>${address}</td>
+</tr>
+
+<tr>
+<td><strong>Postal Code</strong></td>
+<td>${postal_code}</td>
+</tr>
+
+</table>
+
+</div>
+
+<h2>Ordered Products</h2>
+
+<table class="products">
+
+<thead>
+<tr>
+<th>Product</th>
+<th>Qty</th>
+<th>Price</th>
+<th>Subtotal</th>
+</tr>
+</thead>
+
+<tbody>
+${productRows}
+</tbody>
+
+</table>
+
+<div class="total">
+Total: €${Number(total_price).toFixed(2)}
+</div>
+
+<div class="footer">
+Order generated from your webshop.
+</div>
+
+</div>
+
+</body>
+</html>
+`,
+        });
+
+        return redirect("/products?success=true")
     } catch (eror) {
 
         console.error("Error while sending the email:", eror)
     }
 }
 
-function OrderForm({ }: Props) {
+function OrderForm({ actionData }: Route.ComponentProps) {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
-
     // Load cart when opened
     useEffect(() => {
         try {
             const items = JSON.parse(localStorage.getItem("cart") || "[]");
             setCartItems(items);
+
         } catch {
             setCartItems([]);
+
         }
     }, []);
+
 
     function syncCart(updated: CartItem[]) {
         setCartItems(updated);
@@ -105,7 +284,10 @@ function OrderForm({ }: Props) {
         const updated = cartItems.filter(i => i.productId !== id);
         syncCart(updated);
     }
-
+    const totalPrice = cartItems.reduce(
+        (sum, item) => sum + item.productPrice * item.quantity,
+        0
+    );
     return (
         <div>
             <h1>Order Form</h1>
@@ -168,8 +350,13 @@ function OrderForm({ }: Props) {
                             </div>
                         ))
                     )}
-
                     <Form method='post' className="max-w-md mx-auto">
+                        <input type="hidden" name="cart" value={JSON.stringify(cartItems)} />
+                        <div>
+                            <input type="hidden" name='total_price' value={totalPrice} />
+                            <h2>Total: <span className='text-2xl' >{totalPrice.toFixed(2)}€</span> </h2>
+                        </div>
+
                         <div className="relative z-0 w-full mb-5 group">
                             <input
                                 type="email"
@@ -239,8 +426,41 @@ function OrderForm({ }: Props) {
                                     Phone number
                                 </label>
                             </div>
-
+                            <div className="relative z-0 w-full mb-5 group">
+                                <input
+                                    type="text"
+                                    name="address"
+                                    id="floating_address"
+                                    className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                                    placeholder=" "
+                                    required
+                                />
+                                <label
+                                    htmlFor="address"
+                                    className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
+                                >
+                                    Adress
+                                </label>
+                            </div>
+                            <div className="relative z-0 w-full mb-5 group">
+                                <input
+                                    type="String"
+                                    accept='{0-9}'
+                                    name="postal_code"
+                                    id="floating_postal_code"
+                                    className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                                    placeholder=" "
+                                    required
+                                />
+                                <label
+                                    htmlFor="postal_code"
+                                    className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
+                                >
+                                    Postal Code
+                                </label>
+                            </div>
                         </div>
+
                         <button
                             type="submit"
                             className="text-white bg-blue-700 box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-md

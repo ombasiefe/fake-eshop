@@ -16,7 +16,8 @@ export default [
         route('admin/logout', "routes/Dashboard/Logout.tsx"),
 
         route("admin/products/add_product", "routes/Dashboard/AddProducts.tsx"),
-        route("admin/products/:id", "routes/Dashboard/EditProducts.tsx")
+        route("admin/products/:id", "routes/Dashboard/EditProducts.tsx"),
+        route("admin/orders", "routes/Dashboard/Orders.tsx")
     ])
 
 ] satisfies RouteConfig;

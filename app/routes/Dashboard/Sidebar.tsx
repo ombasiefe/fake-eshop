@@ -99,7 +99,7 @@ const Sidebar = (props: Props) => {
                     <hr className="my-6 border-gray-200 dark:border-gray-600" />
                     <a
                         className="flex items-center px-4 py-2 mt-5 text-gray-600 transition-colors duration-300 transform rounded-md dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 hover:text-gray-700"
-                        href="#"
+                        href="/admin/orders"
                     >
                         <svg
                             className="w-5 h-5"
@@ -115,7 +115,7 @@ const Sidebar = (props: Props) => {
                                 strokeLinejoin="round"
                             />
                         </svg>
-                        <span className="mx-4 font-medium">Tickets</span>
+                        <span className="mx-4 font-medium">Orders</span>
                     </a>
                     <a
                         className="flex items-center px-4 py-2 mt-5 text-gray-600 transition-colors duration-300 transform rounded-md dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 hover:text-gray-700"

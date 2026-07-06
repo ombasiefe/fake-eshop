@@ -1,7 +1,7 @@
 import { error } from 'console'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import type { Route } from './+types/Products'
-import { redirect } from 'react-router'
+import { redirect, useSearchParams } from 'react-router'
 import { prisma } from "~/db.server"
 import { Form } from 'react-router'
 import { FaShoppingBasket } from 'react-icons/fa'
@@ -85,7 +85,16 @@ function Products({ loaderData }: Route.ComponentProps) {
 
     }
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const success = searchParams.get("success") === "true";
+    useEffect(() => {
+        if (!success) return
 
+        localStorage.removeItem("cart");
+        searchParams.delete("success")
+        setSearchParams(searchParams)
+
+    }, [success])
     return (
         <>
             <div className='flex flex-col items-center justify-around'>
