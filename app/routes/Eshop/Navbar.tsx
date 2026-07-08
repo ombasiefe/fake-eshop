@@ -18,9 +18,7 @@ type RootLoaderData = {
 };
 
 function Navbar({ }: Props) {
-    // ✅ Fix: Move hook inside the component
-    //const data = useRouteLoaderData("root") as RootLoaderData | undefined;
-    //const user = data?.user;
+
 
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [cartItemCount, setCartItemCount] = useState(0);
@@ -73,13 +71,15 @@ function Navbar({ }: Props) {
                     </Button>
 
                     {/* Only show the profile button if a user is logged in */}
-                    {user && (
+                    {user ? (
                         <Avatar onClick={() => setProfileOpen(true)} rounded
                         >
                         </Avatar>
 
+                    ) : (
+                        <Button as={Link} to="/login">Login</Button>
                     )}
-                    < NavbarToggle />
+                    <NavbarToggle />
                 </div>
 
                 <NavbarCollapse>

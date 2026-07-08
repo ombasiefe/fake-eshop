@@ -10,7 +10,8 @@ export default [
         route("/register", "routes/Register.tsx"),
         route("/order-form", "routes/Eshop/OrderForm.tsx"),
         route("/user-profile", "routes/Eshop/UserProfile.tsx"),
-        route("/user/logout", "routes/Eshop/Logout.tsx")
+        route("/user/logout", "routes/Eshop/Logout.tsx"),
+        route("/user/orders", "routes/Eshop/UserOrders.tsx"),
     ]),
     layout("routes/Dashboard/AdminDashboard.tsx", [
         route("admin", "routes/Dashboard/Home.tsx"),

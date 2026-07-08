@@ -46,7 +46,7 @@ export async function action({ request }: Route.ActionArgs) {
                         "Set-Cookie": await commitSession(session)
                     }
                 });
-            return redirect('/order-form', {
+            return redirect('/products', {
                 headers: {
                     "Set-Cookie": await commitSession(session)
                 }

@@ -16,4 +16,33 @@ if (!globalForPrisma.prisma) {
     globalForPrisma.prisma = new PrismaClient({ adapter })
 }
 prisma = globalForPrisma.prisma
+
+
+export async function getUserOrders({ user_id }: { user_id: number }) {
+    try {
+        const orders = await prisma.order.findMany({
+            include: {
+                items: {
+                    include: { product: true }
+                }
+            }, where: { userId: user_id }
+        })
+
+        if (orders.length == 0) {
+            return { orders: [], error: "No orders found !" }
+        }
+
+        const ordersWithTotal = orders.map(order => {
+            const totalPrice = order.items.reduce((sum, item) => {
+                return sum + item.price * item.quantity;
+            }, 0)
+            return { ...order, totalPrice }
+        })
+
+        return { orders: ordersWithTotal, error: null };
+    } catch (e) {
+        console.error("An error occured:", e)
+        return { error: "Error while fetching orders !" }
+    }
+}
 export { prisma }

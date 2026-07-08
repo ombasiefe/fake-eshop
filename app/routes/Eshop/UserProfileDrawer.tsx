@@ -22,7 +22,10 @@ export default function UserProfileDrawer({ isOpen, handleClose, user }: Props) 
                         {user?.email || "No email available"}
                     </h2>
                 </div>
-                <div className="flex justify-end">
+                <div className="flex gap-4 mt-2">
+                    <Button href="/user/orders">
+                        My Orders
+                    </Button>
                     <Button href="/user/logout">
                         Logout
                     </Button>
