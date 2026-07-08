@@ -16,7 +16,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       where: { isActive: true },
       take: 5
     });
-    console.log(products)
+    //console.log(products)
     if (products.length === 0) {
       console.error("No products Found")
     }
@@ -33,7 +33,7 @@ export async function action({ request }: Route.ActionArgs) {
   switch (actionType) {
     case "see_details":
       try {
-        console.log("product:", prodId)
+        //console.log("product:", prodId)
         return redirect(`/products/${prodId}`)
       } catch (e) {
         console.error("Could not redirect to product details page:", e)
@@ -47,7 +47,8 @@ function EshopHome({ loaderData }: Route.ComponentProps) {
     <div className='flex flex-col items-center justify-around'>
       <div className='flex justify-around flex-wrap gap-4 '>
         {userPrducts.products?.map((prod) => (
-          <div className='w-80 flex flex-col border p-2 items-center justify-around rounded-lg hover:rotate-1 '>
+          <div className='w-80 flex flex-col border p-2 items-center justify-around rounded-lg 
+          hover:rotate-1 ' key={prod.id}>
             <h2 className='text-cente text-xl'>{prod.title}</h2>
             <img src={prod.image} alt={prod.title} className='w-24' />
             <p>{prod.description}</p>

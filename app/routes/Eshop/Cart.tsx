@@ -153,8 +153,10 @@ function Cart({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
                             </div>
                         ))
                     )}
+
                     <a className="p-2 bg-blue-700 text-center cursor-pointer"
-                        href="/order-form">
+                        href="/order-form"
+                        style={cartItems.length > 0 ? { visibility: 'visible' } : { visibility: 'hidden' }}>
                         Buy Products</a>
                 </div>
             </div>

@@ -1,119 +1,118 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from "react";
+import { Avatar, Button, Navbar as FlowbiteNavbar, NavbarBrand, NavbarCollapse, NavbarLink, NavbarToggle } from "flowbite-react";
+import { Link, useRouteLoaderData } from "react-router";
 import { AiOutlineShopping } from "react-icons/ai";
-import Cart from './Cart';
+import Cart from "./Cart";
+import UserProfileDrawer from "./UserProfileDrawer";
+import { type loader } from "./EshopMain"
 
-type Props = {}
+
+type Props = {};
+
+// Define a type for your root loader data so TypeScript knows what 'user' is.
+type RootLoaderData = {
+    user?: {
+        name: string;
+        email: string;
+    } | null;
+};
 
 function Navbar({ }: Props) {
+    // ✅ Fix: Move hook inside the component
+    //const data = useRouteLoaderData("root") as RootLoaderData | undefined;
+    //const user = data?.user;
+
     const [isCartOpen, setIsCartOpen] = useState(false);
-    const [CartItemCount, setCartItemCount] = useState<number>()
-    const [cartItem, setCartItem] = useState<[]>([])
+    const [cartItemCount, setCartItemCount] = useState(0);
+    const [isProfileOpen, setProfileOpen] = useState(false);
+
     useEffect(() => {
-        const updatedCount = () => {
-            const cart = JSON.parse(localStorage.getItem("cart") || "[]")
-            setCartItemCount(cart.length)
-        }
-        updatedCount();
-        window.addEventListener("cartUpdated", updatedCount)
+        const updateCount = () => {
+            const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+            setCartItemCount(cart.length);
+        };
+
+        updateCount();
+        window.addEventListener("cartUpdated", updateCount);
 
         return () => {
-            window.removeEventListener("cartUpdated", updatedCount)
-        }
-    },)
+            window.removeEventListener("cartUpdated", updateCount);
+        };
+    }, []); // ✅ Fix: Added empty dependency array so this runs only once on mount
+
+    const data = useRouteLoaderData<typeof loader>("routes/Eshop/EshopMain")
+    const user = data?.user
+
 
     return (
         <>
-            <nav className="bg-neutral-primary fixed w-full z-20 top-0 start-0 border-b border-default">
-                <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-                    <a
-                        href="/"
-                        className="flex items-center space-x-3 rtl:space-x-reverse"
-                    >
-                        <img
-                            src="https://flowbite.com/docs/images/logo.svg"
-                            className="h-7"
-                            alt="Flowbite Logo"
-                        />
-                        <span className="self-center text-xl text-heading font-semibold whitespace-nowrap">
-                            Flowbite
-                        </span>
-                    </a>
-                    <button
-                        data-collapse-toggle="navbar-default"
-                        type="button"
-                        className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-body rounded-base md:hidden hover:bg-neutral-secondary-soft hover:text-heading focus:outline-none focus:ring-2 focus:ring-neutral-tertiary"
-                        aria-controls="navbar-default"
-                        aria-expanded="false"
-                    >
-                        <span className="sr-only">Open main menu</span>
-                        <svg
-                            className="w-6 h-6"
-                            aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={24}
-                            height={24}
-                            fill="none"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke="currentColor"
-                                strokeLinecap="round"
-                                strokeWidth={2}
-                                d="M5 7h14M5 12h14M5 17h14"
-                            />
-                        </svg>
-                    </button>
-                    <div className="hidden w-full md:block md:w-auto" id="navbar-default">
-                        <ul className="font-medium flex flex-col p-4 md:p-0 mt-4 border border-default rounded-base bg-neutral-secondary-soft md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-neutral-primary">
-                            <li>
-                                <a
-                                    href="/"
-                                    className="block py-2 px-3 text-white bg-brand rounded md:bg-transparent md:text-fg-brand md:p-0"
-                                    aria-current="page"
-                                >
-                                    Home
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    href="/products"
-                                    className="block py-2 px-3 text-heading rounded hover:bg-neutral-tertiary md:hover:bg-transparent md:border-0 md:hover:text-fg-brand md:p-0 md:dark:hover:bg-transparent"
-                                >
-                                    Products
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    href="#"
-                                    className="block py-2 px-3 text-heading rounded hover:bg-neutral-tertiary md:hover:bg-transparent md:border-0 md:hover:text-fg-brand md:p-0 md:dark:hover:bg-transparent"
-                                >
-                                    About
-                                </a>
-                            </li>
+            <FlowbiteNavbar fluid rounded className="border-b shadow-sm z-50">
+                <NavbarBrand as={Link} href="/">
+                    <img
+                        src="https://flowbite.com/docs/images/logo.svg"
+                        className="mr-3 h-6 sm:h-9"
+                        alt="Logo"
+                    />
+                    <span className="self-center whitespace-nowrap text-xl font-semibold">
+                        Fake E-Shop
+                    </span>
+                </NavbarBrand>
 
-                            <li>
-                                <a
-                                    href="#"
-                                    className="block py-2 px-3 text-heading rounded hover:bg-neutral-tertiary md:hover:bg-transparent md:border-0 md:hover:text-fg-brand md:p-0 md:dark:hover:bg-transparent"
-                                >
-                                    Contact
-                                </a>
-                            </li>
-                            <li>
-                                <button className='flex'
-                                    onClick={() => setIsCartOpen(true)}>
-                                    <AiOutlineShopping className='text-2xl' />
-                                    <span className='bg-blue-700  rounded-lg px-1 top-0 text-md '>
-                                        {CartItemCount}</span>
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
+                <div className="flex md:order-2 items-center gap-2">
+                    <Button
+                        color="light"
+                        onClick={() => setIsCartOpen(true)}
+                        className="relative"
+                    >
+                        <AiOutlineShopping className="text-2xl" />
+                        {cartItemCount > 0 && (
+                            <span className="absolute -top-2 -right-2 rounded-full bg-blue-600 text-white text-xs px-2 py-0.5">
+                                {cartItemCount}
+                            </span>
+                        )}
+                    </Button>
+
+                    {/* Only show the profile button if a user is logged in */}
+                    {user && (
+                        <Avatar onClick={() => setProfileOpen(true)} rounded
+                        >
+                        </Avatar>
+
+                    )}
+                    < NavbarToggle />
                 </div>
-            </nav>
-            <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
+                <NavbarCollapse>
+                    <NavbarLink as={Link} href="/">
+                        Home
+                    </NavbarLink>
+                    <NavbarLink href="/products">
+                        Products
+                    </NavbarLink>
+                    <NavbarLink as={Link} >
+                        About
+                    </NavbarLink>
+                    <NavbarLink as={Link} >
+                        Contact
+                    </NavbarLink>
+                </NavbarCollapse>
+            </FlowbiteNavbar>
+
+            <Cart
+                isOpen={isCartOpen}
+                onClose={() => setIsCartOpen(false)}
+            />
+
+            {/* ✅ Render the drawer only if user is present to avoid type crashes */}
+            {user && (
+                <UserProfileDrawer
+                    isOpen={isProfileOpen}
+                    handleClose={() => setProfileOpen(false)}
+                    user={user}
+                />
+            )}
         </>
-    )
+    );
 }
 
-export default Navbar
+export default Navbar;

@@ -55,7 +55,7 @@ export async function action({ request }: Route.ActionArgs) {
                 console.log("the category inserted")
                 const categories = await prisma.categories.findMany();
 
-                console.log(categories)
+                // console.log(categories)
 
 
                 const categoryMap = Object.fromEntries(categories.map(c => [c.name, c.id]))
@@ -82,7 +82,7 @@ export async function action({ request }: Route.ActionArgs) {
             try {
                 const product_id = Number(formData.get('prodId'))
                 if (!product_id) return { error: "Product id not found " }
-                console.log("product_id", product_id)
+                // console.log("product_id", product_id)
                 return redirect(`${product_id}`)
             } catch (e) {
                 console.error("An error occur while trying to reach the edit product component", e)
@@ -91,7 +91,7 @@ export async function action({ request }: Route.ActionArgs) {
             try {
                 const productId = Number(formData.get('prod_Id'));
                 if (!productId) return { error: "Product id not found " }
-                console.log(productId)
+                // console.log(productId)
 
                 await prisma.products.delete({
                     where: { id: productId }
@@ -113,7 +113,7 @@ const Products = ({ actionData, loaderData }: Route.ComponentProps) => {
 
     const { products, totalPages, page } = loaderData;
     const fetcher = useFetcher();
-    console.log("Products from db:", products)
+    //console.log("Products from db:", products)
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null)
     return (

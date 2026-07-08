@@ -11,7 +11,7 @@ export async function loader({ params }: Route.LoaderArgs) {
         const product_details = await prisma.products.findFirst({
             where: { id: prod_Id, isActive: true }
         })
-        console.log(product_details)
+        // console.log(product_details)
         return { product_details }
 
     } catch (e) {
