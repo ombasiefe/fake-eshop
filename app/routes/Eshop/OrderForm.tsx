@@ -43,7 +43,7 @@ export async function action({ request }: Route.ActionArgs) {
     const session = await getSession(request.headers.get('Cookie'));
     const userId = Number(session.get('userId'))
     try {
-        const new_order = await prisma.order.create({
+        const new_order = await prisma.orders.create({
             data: {
                 email,
                 tel: phone,

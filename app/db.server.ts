@@ -20,12 +20,13 @@ prisma = globalForPrisma.prisma
 
 export async function getUserOrders({ user_id }: { user_id: number }) {
     try {
-        const orders = await prisma.order.findMany({
+        const orders = await prisma.orders.findMany({
             include: {
                 items: {
                     include: { product: true }
                 }
-            }, where: { userId: user_id }
+            }, where: { userId: user_id },
+            orderBy: { createdAt: 'desc' }
         })
 
         if (orders.length == 0) {

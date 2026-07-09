@@ -1,6 +1,6 @@
 import React from 'react'
 import { Form, type ActionFunctionArgs } from 'react-router'
-import Sidebar from './Sidebar';
+import { AdminSidebar as Sidebar } from './AdminSidebar';
 import { Outlet, redirect } from 'react-router';
 import { getSession } from '~/session.server';
 import type { Route } from './+types/AdminDashboard'
@@ -32,7 +32,7 @@ function AdminDashboard({ loaderData }: Route.ComponentProps) {
     return (
         <div className="flex h-screen w-screen overflow-hidden">
 
-            <aside className="w-64 border-r shrink-0">
+            <aside className=" border-r shrink-0 bg-[#1D2A45]">
                 <Sidebar />
             </aside>
 

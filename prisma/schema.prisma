@@ -29,10 +29,10 @@ model User{
   email String @unique
   password String
   isAdmin Boolean @default(false)
-  orders Order[]
+  orders Orders[]
 }
 
-model Order{
+model Orders{
   id Int @id @default(autoincrement())
   email String 
   tel String
@@ -44,15 +44,24 @@ model Order{
   postalCode String 
   items OrderItem[]
   createdAt DateTime @default(now())
+  Status OrderStatus @default(pending)
 }
 
 model OrderItem{
   id Int @id @default(autoincrement())
   orderId Int
-  order Order @relation(fields:[orderId],references:[id])
+  order Orders @relation(fields:[orderId],references:[id])
   productId Int
   product products @relation(fields:[productId],references:[id])
 
 quantity Int
 price Float @db.Double
+}
+
+enum OrderStatus{
+  pending
+  working_on_it
+  on_the_way
+  delivered
+  canceled
 }
