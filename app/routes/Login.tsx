@@ -8,15 +8,19 @@ type Props = {}
 
 import { getSession, commitSession, } from '~/session.server';
 
-export async function loader({ request, }: Route.LoaderArgs) {
-    const session = await getSession(
-        request.headers.get("Cookie"),
-    )
-    if (session.has("userId")) {
-        return redirect("/login");
-    }
+// export async function loader({ request, }: Route.LoaderArgs) {
+//     const session = await getSession(
+//         request.headers.get("Cookie"),
+//     )
 
-}
+//     // If they already have a session, send them to the storefront instead of looping
+//     if (session.has("userId")) {
+//         return redirect("/products");
+//     }
+
+//     return null;
+
+// }
 
 
 export async function action({ request }: Route.ActionArgs) {

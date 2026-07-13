@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
 }
 
 datasource db {
@@ -7,15 +8,17 @@ datasource db {
 }
 
 model products {
-  id          Int        @id @default(autoincrement())
-  title       String     @unique
-  description String     @db.Text
-  price       Float     @db.Double
-  image       String     @unique
-  isActive    Boolean    @default(false)
+  id          Int         @id @default(autoincrement())
+  title       String      @unique
+  description String      @db.Text
+  price       Float
+  image       String      @unique
+  isActive    Boolean     @default(false)
   categoryId  Int
-  category    categories @relation(fields: [categoryId], references: [id])
-  orderItem OrderItem[]
+  orderitem   orderitem[]
+  category    categories  @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId], map: "products_categoryId_fkey")
 }
 
 model categories {
@@ -24,41 +27,69 @@ model categories {
   products products[]
 }
 
-model User{
-  id Int @id @default(autoincrement())
-  email String @unique
-  password String
-  isAdmin Boolean @default(false)
-  orders Orders[]
-}
-
-model Orders{
-  id Int @id @default(autoincrement())
-  email String 
-  tel String
-  userId Int
-  user User @relation(fields:[userId],references:[id])
-  address String
-  firstName String 
-  lastName String 
-  postalCode String 
-  items OrderItem[]
-  createdAt DateTime @default(now())
-  Status OrderStatus @default(pending)
-}
-
-model OrderItem{
-  id Int @id @default(autoincrement())
-  orderId Int
-  order Orders @relation(fields:[orderId],references:[id])
+model orderitem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
   productId Int
-  product products @relation(fields:[productId],references:[id])
+  quantity  Int
+  price     Float
+  orders    orders   @relation(fields: [orderId], references: [id], map: "OrderItem_orderId_fkey")
+  products  products @relation(fields: [productId], references: [id], map: "OrderItem_productId_fkey")
 
-quantity Int
-price Float @db.Double
+  @@index([orderId], map: "OrderItem_orderId_fkey")
+  @@index([productId], map: "OrderItem_productId_fkey")
 }
 
-enum OrderStatus{
+model orders {
+  id         Int           @id @default(autoincrement())
+  email      String
+  tel        String
+  userId     Int
+  address    String
+  firstName  String
+  lastName   String
+  postalCode String
+  createdAt  DateTime      @default(now())
+  Status     orders_Status @default(pending)
+  items      orderitem[]
+  user       user          @relation(fields: [userId], references: [id], map: "Orders_userId_fkey")
+
+  @@index([userId], map: "Orders_userId_fkey")
+}
+
+model user {
+  id       Int      @id @default(autoincrement())
+  email    String   @unique(map: "User_email_key")
+  password String
+  isAdmin  Boolean  @default(false)
+  orders   orders[]
+}
+
+view orderschartdata {
+  date         DateTime? @db.Date
+  orders       Int    @default(0)
+  total_income Float?
+}
+
+view orderstatuschart {
+  Status orderstatuschart_Status @default(pending)
+  count  Int                  @default(0)
+}
+
+view productsbycategorychartdata {
+  name  String
+  count Int @default(0)
+}
+
+enum orders_Status {
+  pending
+  working_on_it
+  on_the_way
+  delivered
+  canceled
+}
+
+enum orderstatuschart_Status {
   pending
   working_on_it
   on_the_way

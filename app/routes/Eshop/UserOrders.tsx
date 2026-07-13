@@ -5,6 +5,9 @@ import { getUserOrders, prisma } from '~/db.server';
 import { Button } from 'flowbite-react';
 import { Form } from 'react-router';
 import { MdCancel } from 'react-icons/md';
+import prismaClientPkg from "@prisma/client"
+
+const { orders_Status } = prismaClientPkg
 type Props = {}
 export async function loader({ request }: Route.LoaderArgs) {
     const user_id = await getUserId(request);
@@ -29,7 +32,7 @@ export async function action({ request }: Route.ActionArgs) {
                             id: order_id
                         },
                         data: {
-                            Status: "canceled"
+                            Status: orders_Status.canceled
                         }
                     })
                     if (updated_user.Status === "canceled") {
@@ -47,7 +50,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
 }
 function UserOrders({ loaderData, actionData }: Route.ComponentProps) {
-    const { orders } = loaderData.orders
+    const { orders } = loaderData?.orders || []
     const success = actionData?.success
 
 
@@ -60,10 +63,10 @@ function UserOrders({ loaderData, actionData }: Route.ComponentProps) {
                     <div key={order?.id} className='flex flex-wrap border items-center rounded-md p-1 gap-1'  >
                         <h2>{order.createdAt.toLocaleDateString("en-GB")} {order.createdAt.toLocaleTimeString("en-GB")}</h2>
                         <div>
-                            {order?.items?.map((orderItem) => (
+                            {order?.items.map((orderItem) => (
                                 <div className='flex items-center p-1' key={orderItem.id}>
-                                    <img src={orderItem.product.image} alt={orderItem.product.title} className='h-20' />
-                                    <h3>{orderItem.product?.title}</h3>
+                                    <img src={orderItem.products.image} alt={orderItem.products.title} className='h-20' />
+                                    <h3>{orderItem.products?.title}</h3>
 
                                     <div className='flex gap-1 bg-white text-black p-1 rounded-md mx-1'>
                                         <span>Quantity: {orderItem.quantity} </span>

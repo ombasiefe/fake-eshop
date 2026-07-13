@@ -23,7 +23,7 @@ export async function getUserOrders({ user_id }: { user_id: number }) {
         const orders = await prisma.orders.findMany({
             include: {
                 items: {
-                    include: { product: true }
+                    include: { products: true }
                 }
             }, where: { userId: user_id },
             orderBy: { createdAt: 'desc' }

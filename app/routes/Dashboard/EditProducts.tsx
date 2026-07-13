@@ -158,7 +158,7 @@ function EditProducts({ loaderData }: Route.ComponentProps) {
                         </textarea>
                     </label>
                     <label > Category:
-                        <select className='border p-2 rounded-md' name='category'>
+                        <select className='border p-2 rounded-md' name='category' defaultValue={product_info.product_details?.categoryId}>
                             {product_info.Db_categories?.map((cat) => (
                                 <option key={cat.id}
                                     className='bg-gray-700'

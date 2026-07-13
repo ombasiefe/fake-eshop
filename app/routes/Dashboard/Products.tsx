@@ -47,37 +47,53 @@ export async function action({ request }: Route.ActionArgs) {
                 const apiProducts = await response.json();
                 //console.log(apiProducts);
                 const category_names = [...new Set(apiProducts.map((prod: any) => prod.category))] as string[]
-
-                await prisma.categories.createMany({
-                    data: category_names.map(name => ({ name })),
-                    skipDuplicates: true
-                });
+                console.log(category_names)
+                await Promise.all(
+                    category_names.map((name) =>
+                        prisma.categories.upsert({
+                            where: { name: name },
+                            update: {},
+                            create: { name: name },
+                        })
+                    )
+                )
                 console.log("the category inserted")
-                const categories = await prisma.categories.findMany();
+                const categories = await prisma.categories.findMany({
+                    where: {
+                        name: { in: category_names }
+                    }
+                });
 
                 // console.log(categories)
 
 
                 const categoryMap = Object.fromEntries(categories.map(c => [c.name, c.id]))
-                const transformedData = apiProducts.map((item: any) => ({
-                    title: item.title,
-                    description: item.description,
-                    price: item.price,
-                    image: item.image,
-                    categoryId: categoryMap[item.category]
-                }))
-                // console.log("transfromed Data:", transformedData)
-
-                const result = await prisma.products.createMany({
+                const transformedData = apiProducts.map((item: any) => {
+                    const catId = categoryMap[item.category.trim()];
+                    if (!catId) {
+                        throw new Error(`Category ID mapping failed for category: ${item.category}`)
+                    }
+                    return {
+                        title: item.title,
+                        description: item.description,
+                        price: item.price,
+                        image: item.image,
+                        categoryId: catId
+                    }
+                })
+                await prisma.products.createMany({
                     data: transformedData,
                     skipDuplicates: true,
                 })
+                //console.log("transfromed Data:", transformedData)
+
+
 
                 console.log("Products inserted successfully")
             } catch (e) {
                 console.error("Product insert failed:", e)
             }
-            break
+            break;
         case "edit_this_prod":
             try {
                 const product_id = Number(formData.get('prodId'))

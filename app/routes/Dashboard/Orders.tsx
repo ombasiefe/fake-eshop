@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/Orders'
 import { prisma } from "~/db.server"
-import { OrderStatus } from '@prisma/client'
+import prismaClientPkg from "@prisma/client"
+
 import { Form, useSubmit } from 'react-router'
-import { Select } from 'flowbite-react'
+import { Card, Select } from 'flowbite-react'
 import { MdCancel } from 'react-icons/md'
 
+const { orders_Status } = prismaClientPkg
 type Props = {}
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -13,12 +15,12 @@ export async function loader({ request }: Route.LoaderArgs) {
         const orders = await prisma.orders.findMany({
             include: {
                 items: {
-                    include: { product: true }
+                    include: { products: true }
                 }
             },
             orderBy: { createdAt: 'desc' }
         })
-        const statusOptions = Object.values(OrderStatus);
+        const statusOptions = Object.values(orders_Status);
         if (orders.length == 0) {
             return { orders: [], error: "No orders found !" }
         }
@@ -70,20 +72,22 @@ function Orders({ loaderData }: Route.ComponentProps) {
 
 
     return (
-        <div className='flex gap-2 flex-wrap'>
+        <div className='flex gap-2 flex-wrap w-fit'>
             {orders?.length == 0 ? (
                 <p>{loaderData.error}</p>
             ) : (
                 orders?.map((order) => (
-                    <div className='border w-[350px] p-10 rounded-md flex-wrap' key={order.id}>
-                        <h2 className='text-xl'>Order {order?.id}</h2>
+                    <Card className='border w-[460px] p-10 flex rounded-md flex-wrap ' key={order.id}>
+                        <h2 className='text-xl'>Order <span className='bg-blue-700 p-2 rounded-xl'> {order?.id}</span></h2>
                         <span>{order?.createdAt.toLocaleDateString("en-GB")}  {order?.createdAt.toLocaleTimeString("en-GB")}</span>
 
 
                         {order.items.map((order_item) => (
                             <div key={order_item.id}>
-                                <h3>{order_item.product.title}</h3>
-                                <img src={order_item.product.image} alt={order_item.product.title} className='h-30' />
+                                <div >
+                                    <h3>{order_item.products.title}</h3>
+                                    <img src={order_item.products.image} alt={order_item.products.title} className='h-30' />
+                                </div>
                                 <div className='flex gap-4 text-lg items-center'>
                                     <span >Qauntity:{order_item.quantity}</span>
 
@@ -91,7 +95,7 @@ function Orders({ loaderData }: Route.ComponentProps) {
                                 </div>
                             </div>
                         ))}
-                        <h2 className='text-2xl mx-48'>Total: {order.totalPrice}€</h2><hr />
+                        <h2 className='text-2xl mx-48'>Total: {order.totalPrice}€</h2>
                         <div>
                             <h2 className='text-xl'>Customer Details</h2>
                             <h3>Full Name: {order.firstName} {order.lastName}</h3>
@@ -120,7 +124,7 @@ function Orders({ loaderData }: Route.ComponentProps) {
                             }}>
                                 <input type="hidden" name="action" value="update_state" />
                                 <input type="hidden" name='orderId' value={order.id} />
-                                <Select name="status"
+                                <Select name="status" className='w-fit'
                                     defaultValue={order.Status}>
                                     {statusOptions?.map((stat_opt) => (
                                         <option
@@ -132,7 +136,7 @@ function Orders({ loaderData }: Route.ComponentProps) {
                                 </Select>
                             </Form>
                         )}
-                    </div>
+                    </Card>
                 ))
             )}
         </div>
