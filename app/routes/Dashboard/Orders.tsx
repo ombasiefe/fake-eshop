@@ -77,7 +77,7 @@ function Orders({ loaderData }: Route.ComponentProps) {
                 <p>{loaderData.error}</p>
             ) : (
                 orders?.map((order) => (
-                    <Card className='border w-[460px] p-10 flex rounded-md flex-wrap ' key={order.id}>
+                    <div className='border w-[450px] p-10 flex rounded-md flex-wrap ' key={order.id}>
                         <h2 className='text-xl'>Order <span className='bg-blue-700 p-2 rounded-xl'> {order?.id}</span></h2>
                         <span>{order?.createdAt.toLocaleDateString("en-GB")}  {order?.createdAt.toLocaleTimeString("en-GB")}</span>
 
@@ -136,7 +136,7 @@ function Orders({ loaderData }: Route.ComponentProps) {
                                 </Select>
                             </Form>
                         )}
-                    </Card>
+                    </div>
                 ))
             )}
         </div>

@@ -46,4 +46,58 @@ export async function getUserOrders({ user_id }: { user_id: number }) {
         return { error: "Error while fetching orders !" }
     }
 }
+interface ContactFormProps {
+    email: string;
+    name: string;
+    surname: string;
+    tel: string;
+    contact_reason: string;
+    message: string;
+}
+export async function ContactFormSubmit({ email, name, surname, tel, contact_reason, message }: ContactFormProps): Promise<{ success: boolean }> {
+    try {
+        const formSubmitted = await prisma.notifications.create({
+            data: {
+                email: email,
+                name: name,
+                surname: surname,
+                tel: tel,
+                reason: contact_reason,
+                message: message
+            }
+        })
+
+        return { success: true }
+    } catch (e) {
+        console.error("An Error occured while sending the contact-form:", e)
+        return { success: false }
+
+    }
+}
+export async function getNotifications() {
+    try {
+        const notifications = await prisma.notifications.findMany({
+            orderBy: { isRead: 'asc' }
+        });
+        return { data: notifications }
+    } catch (e) {
+        console.error("An error occured while fetching the notifications from db", e)
+        return { data: null }
+    }
+
+
+}
+export async function setAdminNotificationRead({ notificationId }: { notificationId: number }) {
+    try {
+        await prisma.notifications.update({
+            where: { id: notificationId },
+            data: { isRead: true },
+        })
+        return { success: true }
+    } catch (e) {
+        console.error("An error occured while updating the notification read status", e)
+        return { success: false }
+    }
+}
+
 export { prisma }

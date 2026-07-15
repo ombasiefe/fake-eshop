@@ -5,7 +5,7 @@ import React from 'react'
 import { redirect } from 'react-router'
 import { prisma } from "~/db.server"
 
-import { Card } from 'flowbite-react';
+import { Button, Card, Carousel } from 'flowbite-react';
 
 type Props = {}
 
@@ -45,8 +45,41 @@ function EshopHome({ loaderData }: Route.ComponentProps) {
 
 
   return (
-    <div className='flex flex-col items-center justify-around'>
+
+    <div className='flex flex-col items-center justify-around gap-4' >
+      <section className="relative w-full h-[60vh] min-h-[400px] flex items-center justify-center overflow-hidden rounded-md">
+        {/* Background Image with Dark Overlay */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/carousel_images/Store_image.png"
+            alt="Car Market Dealership"
+            className="object-cover w-full h-full"
+          />
+          {/* This overlay ensures text is readable on top of the image */}
+          <div className="absolute inset-0 bg-black/60"></div>
+        </div>
+
+        {/* Hero Content */}
+        <div className="relative z-10 text-center px-4 max-w-3xl">
+          <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6">
+            The Complete Modern Lifestyle.
+          </h1>
+          <p className="text-lg md:text-xl text-gray-200 mb-8">
+            Upgrade your wardrobe, your gadgets, and your everyday aesthetic with products crafted for the conscious, modern individual.          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="xl" href='/products'
+              style={{ backgroundColor: "#AD9471" }}>Explore Our Collection</Button>
+            <Button size="xl" color="light" href='#'>Invest to our vision</Button>
+          </div>
+        </div>
+      </section>
+
+
+
+
+
       <div className='flex justify-around flex-wrap gap-4 '>
+
         {userPrducts.products?.map((prod) => (
           <Card
             className="max-w-sm"
@@ -113,8 +146,7 @@ function EshopHome({ loaderData }: Route.ComponentProps) {
         }
 
       </div>
-      <div className='text-center bg-black p-2 w-80 rounded-xl mt-4
-       hover:bg-white hover:text-black cursor-pointer 'onClick={() => window.location.href = '/products'}>
+      <div className='text-center bg-[#AD9471] p-2 w-80 rounded-xl mt-4 cursor-pointer ' onClick={() => window.location.href = '/products'}>
         <button >View All Products</button>
       </div>
     </div >

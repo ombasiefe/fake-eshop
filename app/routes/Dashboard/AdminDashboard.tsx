@@ -37,7 +37,7 @@ function AdminDashboard({ loaderData }: Route.ComponentProps) {
             </aside>
 
             <main className="flex-1 h-full overflow-y-auto p-8  bg-[#1d2a45]">
-                <div className="max-w-6xl mx-auto">
+                <div className="max-w-9xl mx-auto">
                     <Outlet />
                 </div>
             </main>

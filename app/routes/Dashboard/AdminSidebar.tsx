@@ -28,6 +28,7 @@ import { IoMenu } from "react-icons/io5";
 import { AiOutlineProduct } from "react-icons/ai";
 import { MdOutlineCategory } from "react-icons/md";
 import { RiFunctionAddLine } from "react-icons/ri"
+import { IoNotifications } from "react-icons/io5";
 import { BiLogOut } from "react-icons/bi"
 export function AdminSidebar() {
     const [isOpen, setIsOpen] = useState(true);
@@ -74,6 +75,9 @@ export function AdminSidebar() {
 
                                         <SidebarItem href="/admin/orders" icon={HiShoppingBag}>
                                             Orders
+                                        </SidebarItem>
+                                        <SidebarItem href="/admin/notifications" icon={IoNotifications}>
+                                            Notifications
                                         </SidebarItem>
                                         <SidebarItem href="/admin/logout" icon={BiLogOut}>
                                             Log-Out

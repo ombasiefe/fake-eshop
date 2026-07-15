@@ -63,7 +63,7 @@ function Home({ loaderData }: Route.ComponentProps) {
     const orderStatusData = loaderData.orderStatusChartData
 
     return (
-        <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+        <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen rounded-md">
             {/* Header section */}
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">

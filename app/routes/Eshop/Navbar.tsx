@@ -47,16 +47,16 @@ function Navbar({ }: Props) {
             <FlowbiteNavbar fluid rounded className="border-b shadow-sm z-50">
                 <NavbarBrand as={Link} href="/">
                     <img
-                        src="https://flowbite.com/docs/images/logo.svg"
-                        className="mr-3 h-6 sm:h-9"
+                        src="/carousel_images/Oura_Navbar_Logo_2.png"
+                        className="mr-3 h-6 sm:h-9 "
                         alt="Logo"
                     />
-                    <span className="self-center whitespace-nowrap text-xl font-semibold">
-                        Fake E-Shop
+                    <span className="self-center whitespace-nowrap text-xl font-sans ">
+                        Oura-Shop
                     </span>
                 </NavbarBrand>
 
-                <div className="flex md:order-2 items-center gap-2">
+                <div className="flex md:order-2 items-center gap-2" >
                     <Button
                         color="light"
                         onClick={() => setIsCartOpen(true)}
@@ -77,7 +77,10 @@ function Navbar({ }: Props) {
                         </Avatar>
 
                     ) : (
-                        <Button as={Link} to="/login">Login</Button>
+                        <Button as={Link} to="/login"
+                            style={{ backgroundColor: "#AD9471" }}>
+                            Login
+                        </Button>
                     )}
                     <NavbarToggle />
                 </div>
@@ -89,10 +92,10 @@ function Navbar({ }: Props) {
                     <NavbarLink href="/products">
                         Products
                     </NavbarLink>
-                    <NavbarLink as={Link} >
+                    <NavbarLink href="/about" >
                         About
                     </NavbarLink>
-                    <NavbarLink as={Link} >
+                    <NavbarLink href="/contact" >
                         Contact
                     </NavbarLink>
                 </NavbarCollapse>

@@ -70,8 +70,8 @@ function Login({ actionData }: Route.ComponentProps) {
             <div className="px-6 py-4">
                 <div className="flex justify-center mx-auto">
                     <img
-                        className="w-auto h-7 sm:h-8"
-                        src="https://merakiui.com/images/logo.svg"
+                        className=" w-25 rounded-md"
+                        src="/carousel_images/Oura_Navbar_Logo_2.png"
                         alt=""
                     />
                 </div>
@@ -110,7 +110,8 @@ function Login({ actionData }: Route.ComponentProps) {
 
                         <button
                             type='submit'
-                            className="px-6 py-2 text-sm font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-blue-500 rounded-lg hover:bg-blue-400 focus:outline-none focus:ring focus:ring-blue-300 focus:ring-opacity-50">
+                            className="px-6 py-2 text-sm font-medium tracking-wide cursor-pointer text-white capitalize transition-colors duration-300 transform rounded-lg "
+                            style={{ backgroundColor: "#AD9471" }}>
                             Log In
                         </button>
                     </div>
@@ -122,7 +123,8 @@ function Login({ actionData }: Route.ComponentProps) {
                 </span>
                 <a
                     href="/register"
-                    className="mx-2 text-sm font-bold text-blue-500 dark:text-blue-400 hover:underline"
+                    className="mx-2 text-sm font-bold text-blue-500 "
+                    style={{ color: "#AD9471" }}
                 >
                     Register
                 </a>

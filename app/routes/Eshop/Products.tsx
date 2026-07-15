@@ -40,6 +40,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         if (Db_products.length === 0) {
             console.error("No products Found")
         }
+
         return { products: Db_products, page, tot_pages }
     } catch (e) {
         console.error("Error caused by: ", error)
@@ -166,7 +167,7 @@ function Products({ loaderData }: Route.ComponentProps) {
                                 }}>
                                     <a
                                         href="#"
-                                        className="rounded-lg bg-cyan-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-cyan-800 focus:outline-none focus:ring-4 focus:ring-cyan-300 dark:bg-cyan-600 dark:hover:bg-cyan-700 dark:focus:ring-cyan-800"
+                                        className="rounded-lg bg-[#A48866] px-5 py-2.5 text-center text-sm font-medium text-white focus:outline-none focus:ring-4"
                                     >
                                         Add to cart
                                     </a>

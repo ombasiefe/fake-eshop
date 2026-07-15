@@ -65,6 +65,18 @@ model user {
   orders   orders[]
 }
 
+model notifications{
+  id Int @id @default(autoincrement())
+  from String @default("contact_form")
+  email String
+  name String 
+  surname String
+  tel String
+  reason String 
+  message String @db.Text
+  isRead Boolean @default(false)
+}
+
 view orderschartdata {
   date         DateTime? @db.Date
   orders       Int    @default(0)
