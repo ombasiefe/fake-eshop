@@ -23,10 +23,10 @@ export default function UserProfileDrawer({ isOpen, handleClose, user }: Props) 
                     </h2>
                 </div>
                 <div className="flex gap-4 mt-2">
-                    <Button href="/user/orders">
+                    <Button href="/user/orders " style={{ backgroundColor: "#AD9471" }}>
                         My Orders
                     </Button>
-                    <Button href="/user/logout">
+                    <Button href="/user/logout" style={{ backgroundColor: "#AD9471" }}>
                         Logout
                     </Button>
 

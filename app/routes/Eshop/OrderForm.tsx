@@ -356,7 +356,7 @@ function OrderForm({ actionData }: Route.ComponentProps) {
                     {cartItems.length == 0 ? (
                         <div className='flex flex-col justify-center items-center gap-1'>
                             <p className='p-2 bg-white text-black rounded-md '>Cart is empty, there is no item to be ordered !</p>
-                            <Button className='w-max' href='/products'>
+                            <Button className='w-max' href='/products' style={{ backgroundColor: "#AD9471" }}>
                                 <HiShoppingCart className='me-2 h-4 w-4' />
                                 Continue Shopping
                             </Button>
@@ -475,8 +475,8 @@ function OrderForm({ actionData }: Route.ComponentProps) {
 
                             <button
                                 type="submit"
-                                className="text-white bg-blue-700 box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-md
-                             text-sm px-4 py-2.5 focus:outline-none cursor-pointero "
+                                className="text-white bg-blue-700 box-border border border-transparent text-sm px-4 py-2.5  rounded-md cursor-pointer "
+                                style={{ backgroundColor: "#AD9471" }}
                             >
                                 Submit
                             </button>
