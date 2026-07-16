@@ -3,6 +3,7 @@ import type { Route } from './+types/Products';
 
 import { Form, Link, redirect, useFetcher, } from 'react-router'
 import { prisma } from "~/db.server";
+import { ManuelProductStrategy } from '~/services/products/manual-product';
 
 type Props = {}
 
@@ -31,6 +32,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 
 export async function action({ request }: Route.ActionArgs) {
+    const service = new ManuelProductStrategy();
     const formData = await request.formData();
     const actionType = formData.get("action");
     if (!actionType) {
@@ -98,7 +100,6 @@ export async function action({ request }: Route.ActionArgs) {
             try {
                 const product_id = Number(formData.get('prodId'))
                 if (!product_id) return { error: "Product id not found " }
-                // console.log("product_id", product_id)
                 return redirect(`${product_id}`)
             } catch (e) {
                 console.error("An error occur while trying to reach the edit product component", e)
@@ -109,10 +110,7 @@ export async function action({ request }: Route.ActionArgs) {
                 if (!productId) return { error: "Product id not found " }
                 // console.log(productId)
 
-                await prisma.products.delete({
-                    where: { id: productId }
-
-                })
+                service.delete(productId);
 
             } catch (e) {
                 console.error("An occur while trying to delete a product", e)
@@ -356,16 +354,20 @@ const Products = ({ actionData, loaderData }: Route.ComponentProps) => {
                 </div>
             </div>
             <div className='flex justify-center mt-2  gap-5 '>
-                <Link to={`?page=${page - 1}`}
-                    className='p-2 border rounded-md '
-                > Previous</Link>
+                {page > 1 ? (
+                    <Link to={`?page=${page - 1}`}
+                        className='p-2 border rounded-md '
+                    > Previous</Link>
+                ) : (<span></span>)}
                 {Array.from({ length: totalPages }, (_, index) => (
                     <Link key={index}
                         to={`?page=${index + 1}`}
                         className='p-2 border rounded-md '>{index + 1}</Link>
                 ))}
-                <Link to={`?page=${page + 1}`}
-                    className='p-2 border rounded-md '>Next</Link>
+                {page < totalPages ? (
+                    <Link to={`?page=${page + 1}`}
+                        className='p-2 border rounded-md '>Next</Link>
+                ) : (<span></span>)}
             </div>
 
         </section >
