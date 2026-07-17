@@ -6,6 +6,7 @@ import { Button, Card, Badge } from 'flowbite-react';
 import { Form, useNavigation } from 'react-router';
 import { MdCancel, MdLocalPhone, MdOutlineEmail, MdOutlineLocationOn } from 'react-icons/md';
 import prismaClientPkg from "@prisma/client"
+import { ManuelOrderStrategy } from '~/services/orders/manual-order';
 
 const { orders_Status } = prismaClientPkg
 type Props = {}
@@ -21,6 +22,7 @@ export async function action({ request }: Route.ActionArgs) {
     const formData = await request.formData();
     const actionType = formData.get("action");
     const order_id = Number(formData.get("orderId"));
+    const service = new ManuelOrderStrategy();
     switch (actionType) {
         case "cancel_order":
             const currentStatus = await prisma.orders.findUnique({
@@ -28,14 +30,7 @@ export async function action({ request }: Route.ActionArgs) {
             })
             if (currentStatus?.Status == "pending") {
                 try {
-                    const updated_user = await prisma.orders.update({
-                        where: {
-                            id: order_id
-                        },
-                        data: {
-                            Status: orders_Status.canceled
-                        }
-                    })
+                    const updated_user = await service.edit(order_id, { status: orders_Status.canceled })
                     if (updated_user.Status === "canceled") {
                         console.log("order cancelled successfully !")
                         return { success: true }

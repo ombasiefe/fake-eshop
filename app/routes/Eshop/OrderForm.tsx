@@ -6,9 +6,9 @@ import type { Route } from './+types/OrderForm';
 import { Resend } from 'resend';
 import { getSession } from '~/session.server';
 import { redirect } from 'react-router';
-import { prisma } from '~/db.server';
 import { HiShoppingCart } from 'react-icons/hi';
 import { Button } from 'flowbite-react';
+import { ManuelOrderStrategy } from '~/services/orders/manual-order';
 export
     type Props = {}
 type CartItem = {
@@ -42,26 +42,18 @@ export async function action({ request }: Route.ActionArgs) {
     const resend = new Resend(process.env.RESEND_API_KEY)
     const session = await getSession(request.headers.get('Cookie'));
     const userId = Number(session.get('userId'))
+    const service = new ManuelOrderStrategy()
     try {
-        const new_order = await prisma.orders.create({
-            data: {
-                email,
-                tel: phone,
-                userId: userId,
-                address,
-                firstName: first_name,
-                lastName: last_name,
-                postalCode: postal_code,
-                items: {
-                    create: cart.map(item => ({
-                        productId: item.productId,
-                        quantity: item.quantity,
-                        price: item.productPrice
-                    }))
-                }
-            }
+        const new_order = service.add({
+            email: email, tel: phone, userId: userId, address: address, firstName: first_name, lastName: last_name, postalCode: postal_code,
+            items: cart.map(item => ({
+                productId: item.productId,
+                quantity: item.quantity,
+                price: item.productPrice
+            }))
         })
-        if (new_order) {
+
+        if (await new_order) {
             console.log('New order added successfully !')
         }
         const productRows = cart

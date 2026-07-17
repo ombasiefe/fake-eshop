@@ -33,7 +33,7 @@ model orderitem {
   productId Int
   quantity  Int
   price     Float
-  orders    orders   @relation(fields: [orderId], references: [id], map: "OrderItem_orderId_fkey")
+  orders    orders   @relation(fields: [orderId], references: [id], onDelete:Cascade, map: "OrderItem_orderId_fkey")
   products  products @relation(fields: [productId], references: [id], map: "OrderItem_productId_fkey")
 
   @@index([orderId], map: "OrderItem_orderId_fkey")

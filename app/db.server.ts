@@ -1,6 +1,6 @@
 import "dotenv/config"
 import { PrismaMariaDb } from "@prisma/adapter-mariadb"
-import { PrismaClient } from "@prisma/client";
+import { orders_Status, PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined;
@@ -26,7 +26,9 @@ export async function getUserOrders({ user_id }: { user_id: number }) {
                     include: { products: true }
                 }
             }, where: { userId: user_id },
-            orderBy: { createdAt: 'desc' }
+            orderBy: {
+                createdAt: 'desc'
+            }
         })
 
         if (orders.length == 0) {
