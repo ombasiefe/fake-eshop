@@ -3,10 +3,11 @@ import { getUserId } from '~/session.server'
 import type { Route } from './+types/UserOrders'
 import { getUserOrders, prisma } from '~/db.server';
 import { Button, Card, Badge } from 'flowbite-react';
-import { Form, useNavigation } from 'react-router';
+import { Form, useNavigation, useRouteError } from 'react-router';
 import { MdCancel, MdLocalPhone, MdOutlineEmail, MdOutlineLocationOn } from 'react-icons/md';
 import prismaClientPkg from "@prisma/client"
 import { ManuelOrderStrategy } from '~/services/orders/manual-order';
+import OrderError from '../errors/OrderError';
 
 const { orders_Status } = prismaClientPkg
 type Props = {}
@@ -14,8 +15,21 @@ type Props = {}
 export async function loader({ request }: Route.LoaderArgs) {
     const user_id = await getUserId(request);
     const userId = Number(user_id)
-    const Orders = await getUserOrders({ user_id: userId });
-    return { orders: Orders }
+    try {
+        const Orders = await getUserOrders({ user_id: userId });
+        if (!Orders.orders) {
+            throw new Response('User orders not found', { status: 404 })
+        }
+        return { orders: Orders }
+    } catch (e) {
+        if (e instanceof Response) {
+            throw e;
+        }
+        console.error("Error caused by: ", e)
+        throw new Response("Database error", {
+            status: 500,
+        });
+    }
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -44,7 +58,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
 }
 
-function UserOrders({ loaderData, actionData }: Route.ComponentProps) {
+export default function UserOrders({ loaderData, actionData }: Route.ComponentProps) {
     const { orders } = loaderData?.orders || []
     const success = actionData?.success
     const navigation = useNavigation();
@@ -193,4 +207,7 @@ function UserOrders({ loaderData, actionData }: Route.ComponentProps) {
     )
 }
 
-export default UserOrders
+export function ErrorBoundary() {
+    const error = useRouteError();
+    return <OrderError error={error} />
+}

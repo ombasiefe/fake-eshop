@@ -1,7 +1,7 @@
 import { error } from 'console'
 import React, { useEffect, useState } from 'react'
 import type { Route } from './+types/Products'
-import { redirect, useSearchParams } from 'react-router'
+import { isRouteErrorResponse, redirect, useRouteError, useSearchParams } from 'react-router'
 import { prisma } from "~/db.server"
 import { Form } from 'react-router'
 import { FaShoppingBasket } from 'react-icons/fa'
@@ -11,6 +11,7 @@ import { useFetcher } from 'react-router'
 import { Card } from 'flowbite-react'
 
 import Cart from './Cart'
+import ProductError from '../errors/ProductError'
 type Props = {}
 type CartItem = {
     productId: number;
@@ -23,14 +24,15 @@ export async function loader({ request }: Route.LoaderArgs) {
     const pageSize = 6;
     const url = new URL(request.url);
     const page = Number(url.searchParams.get("page")) || 1
-    const tot_products = await prisma.products.count({
-        where: {
-            isActive: true
-        }
-    })
-    const tot_pages = Math.max(1, Math.ceil(tot_products / pageSize));
-    //console.log(tot_pages)
     try {
+        const tot_products = await prisma.products.count({
+            where: {
+                isActive: true
+            }
+        })
+        const tot_pages = Math.max(1, Math.ceil(tot_products / pageSize));
+        //console.log(tot_pages)
+
         const Db_products = await prisma.products.findMany({
             where: { isActive: true },
             skip: (page - 1) * pageSize,
@@ -38,13 +40,21 @@ export async function loader({ request }: Route.LoaderArgs) {
         });
         //console.log(Db_products)
         if (Db_products.length === 0) {
-            console.error("No products Found")
+            //console.error("No products Found")
+            throw new Response("Products not found", {
+                status: 404,
+            })
         }
 
         return { products: Db_products, page, tot_pages }
     } catch (e) {
+        if (e instanceof Response) {
+            throw e;
+        }
         console.error("Error caused by: ", error)
-        return { products: [], page: 1, tot_pages: 1 }
+        throw new Response("Database error", {
+            status: 500,
+        });
     }
 }
 export async function action({ request }: Route.ActionArgs) {
@@ -56,8 +66,10 @@ export async function action({ request }: Route.ActionArgs) {
             try {
                 // console.log("product:", prodId)
                 return redirect(`/products/${prodId}`)
+
             } catch (e) {
                 console.error("Could not redirect to product details page:", e)
+                throw new Response('Could not redirect to details page')
             }
             break;
 
@@ -65,7 +77,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
 }
 
-function Products({ loaderData }: Route.ComponentProps) {
+export default function Products({ loaderData }: Route.ComponentProps) {
     const { products, tot_pages, page } = loaderData;
     function addToCart(prodId: number, prodName: string, prodImage: string, prodPrice: number) {
 
@@ -202,4 +214,8 @@ function Products({ loaderData }: Route.ComponentProps) {
     )
 }
 
-export default Products
+export function ErrorBoundary() {
+    const error = useRouteError();
+
+    return <ProductError error={error} />;
+}

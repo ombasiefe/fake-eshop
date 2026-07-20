@@ -2,6 +2,8 @@ import React from 'react'
 import type { Route } from './+types/ProductDetails'
 import { prisma } from '~/db.server'
 import { FaShoppingBasket } from 'react-icons/fa'
+import ProductError from '../errors/ProductError'
+import { useRouteError } from 'react-router'
 
 type Props = {}
 export async function loader({ params }: Route.LoaderArgs) {
@@ -11,16 +13,25 @@ export async function loader({ params }: Route.LoaderArgs) {
         const product_details = await prisma.products.findFirst({
             where: { id: prod_Id, isActive: true }
         })
+        if (!product_details) {
+            throw new Response('product not found with this id', { status: 404 })
+        }
         // console.log(product_details)
         return { product_details }
 
     } catch (e) {
-        console.error("could not get the product details", e)
-        return { product_details: null }
+        if (e instanceof Response) {
+            throw e;
+        }
+        console.error("Error caused by: ", e)
+        throw new Response("Database error", {
+            status: 500,
+        });
     }
 }
 
-function ProductDetails({ loaderData }: Route.ComponentProps) {
+
+export default function ProductDetails({ loaderData }: Route.ComponentProps) {
     const prod_infos = loaderData
     return (
         <div className='text-center flex'>
@@ -44,4 +55,8 @@ function ProductDetails({ loaderData }: Route.ComponentProps) {
     )
 }
 
-export default ProductDetails
+export function ErrorBoundary() {
+    const error = useRouteError();
+    return <ProductError error={error} />
+}
+

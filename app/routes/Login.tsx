@@ -1,12 +1,13 @@
 import React from 'react'
 import type { Route } from "./+types/Login"
-import { Form, redirect } from 'react-router'
+import { Form, redirect, useRouteError } from 'react-router'
 import { useActionData } from 'react-router'
 import { prisma } from '~/db.server'
 import bcrypt from 'bcryptjs'
 type Props = {}
 
 import { getSession, commitSession, } from '~/session.server';
+import LoginError from './errors/LoginError'
 
 // export async function loader({ request, }: Route.LoaderArgs) {
 //     const session = await getSession(
@@ -36,11 +37,13 @@ export async function action({ request }: Route.ActionArgs) {
             where: { email },
         })
         if (!Db_user) {
-            return { error: 'Invalid Credentials' }
+            throw new Response('User not found', { status: 404 })
+
         }
         const result = await bcrypt.compare(password, Db_user.password)
         if (!result) {
-            return { error: "Invalid " }
+            return { error: "Invalid credentials" }
+
         } else {
             const session = await getSession(request.headers.get("Cookie"));
             session.set("userId", String(Db_user.id))
@@ -58,12 +61,18 @@ export async function action({ request }: Route.ActionArgs) {
         }
 
     } catch (error) {
-        return { error: "Invalid credentials" }
+        if (error instanceof Response) {
+            throw error;
+        }
+        console.error("Error caused by: ", error)
+        throw new Response("Database error", {
+            status: 500,
+        });
     }
 
 }
 
-function Login({ actionData }: Route.ComponentProps) {
+export default function Login({ actionData }: Route.ComponentProps) {
     const info = actionData
     return (
         <div className="w-full max-w-sm mx-auto overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800">
@@ -84,7 +93,7 @@ function Login({ actionData }: Route.ComponentProps) {
                 <Form method='post'>
                     <div className="w-full mt-4">
                         <input
-                            className="block w-full px-4 py-2 mt-2 text-gray-700 placeholder-gray-500 bg-white border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring focus:ring-blue-300"
+                            className="block w-full px-4 py-2 mt-2 text-white  placeholder-gray-500 bg-white border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring focus:ring-blue-300"
                             type="email"
                             name='email'
                             placeholder="Email Address"
@@ -94,7 +103,7 @@ function Login({ actionData }: Route.ComponentProps) {
                     </div>
                     <div className="w-full mt-4">
                         <input
-                            className="block w-full px-4 py-2 mt-2 text-gray-700 placeholder-gray-500 bg-white border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring focus:ring-blue-300"
+                            className="block w-full px-4 py-2 mt-2 text-white placeholder-gray-500 bg-white border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring focus:ring-blue-300"
                             type="password"
                             name='password'
                             placeholder="Password"
@@ -134,4 +143,7 @@ function Login({ actionData }: Route.ComponentProps) {
     )
 }
 
-export default Login
+export function ErrorBoundary() {
+    const error = useRouteError();
+    return <LoginError error={error} />
+}

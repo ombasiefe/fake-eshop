@@ -2,7 +2,7 @@ import { error } from 'console'
 import type { Route } from './+types/EshopHome';
 
 import React from 'react'
-import { redirect } from 'react-router'
+import { data, redirect } from 'react-router'
 import { prisma } from "~/db.server"
 
 import { Button, Card, Carousel } from 'flowbite-react';
