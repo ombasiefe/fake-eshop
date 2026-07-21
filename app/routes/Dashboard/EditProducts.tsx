@@ -1,16 +1,17 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/EditProducts';
-import { Form, redirect, useLoaderData } from 'react-router'
+import { Form, redirect, useLoaderData, useRouteError } from 'react-router'
 import { prisma } from '~/db.server'
 import { HiOutlineSave } from 'react-icons/hi';
 import path from 'path';
 import fs from "fs/promises"
 import { ManuelProductStrategy } from '~/services/products/manual-product';
+import ProductError from '../errors/Dashboard_Errors/ProductError';
 
 type Props = {}
 export async function loader({ params }: Route.LoaderArgs) {
     const product_id = Number(params.id)
-    console.log(product_id);
+    //console.log (product_id);
 
     try {
         const Db_categories = await prisma.categories.findMany();
@@ -20,11 +21,14 @@ export async function loader({ params }: Route.LoaderArgs) {
         })
         if (!product_details) {
             console.error("Error fetching the product details from db")
+            throw new Response("Product not found ", { status: 404 })
         }
         return { product_details, Db_categories }
     } catch (e) {
-        console.error(e);
-        return { product_details: null }
+        if (e instanceof Response) {
+            throw e;
+        }
+        throw new Response('Server Communication failed', { status: 500 })
     }
 }
 export async function action({ params, request }: Route.ActionArgs) {
@@ -37,16 +41,16 @@ export async function action({ params, request }: Route.ActionArgs) {
     const new_visibility = formData.get('visibility') == "on" ? true : false as boolean;
     const new_description = formData.get('description') as string
     const new_category = Number(formData.get('category'))
-    console.log(new_visibility)
+    //console.log(new_visibility)
 
     const new_image = formData.get('image') as File;
-    console.log("new image is", new_image)
+    //console.log("new image is", new_image)
     const current_product = await prisma.products.findUnique({
         where: { id: prod_Id }
     })
 
     let db_Images_path = current_product?.image ?? '/uploads/default-placeholder.png';
-    console.log('new image size: ', new_image.size)
+    //console.log('new image size: ', new_image.size)
 
     if (new_image && new_image.size > 0) {
         const file_extension = path.extname(new_image.name) || ".jpg";
@@ -60,7 +64,7 @@ export async function action({ params, request }: Route.ActionArgs) {
         await fs.writeFile(physicalFilePath, buffer);
 
         db_Images_path = `/uploads/${uniqueFileName}`
-        console.log(db_Images_path)
+        //console.log(db_Images_path)
     }
 
     const data = {
@@ -72,7 +76,7 @@ export async function action({ params, request }: Route.ActionArgs) {
         description: new_description,
         categoryId: new_category
     }
-    console.log(data)
+    //console.log(data)
     try {
         service.edit(data.id, {
             name: data.title,
@@ -85,7 +89,7 @@ export async function action({ params, request }: Route.ActionArgs) {
         return redirect("/admin/products");
     } catch (e) {
         console.error('An error occured while editing product:', e)
-        throw new Response('Product editing error !')
+        throw new Response('Product editing error !', { status: 500 })
     }
 
 
@@ -96,14 +100,14 @@ function EditProducts({ loaderData }: Route.ComponentProps) {
     const product_info = loaderData;
     const handle_image = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        console.log('file is:', file)
+        //console.log('file is:', file)
         if (!file) {
             return
         }
         const url = URL.createObjectURL(file);
         setImage(url)
     }
-    console.log("product ifos:", product_info)
+    //console.log("product ifos:", product_info)
     return (
         <div className="max-w-3xl mx-auto my-8 bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md">
             {/* Header */}
@@ -275,3 +279,8 @@ function EditProducts({ loaderData }: Route.ComponentProps) {
 }
 
 export default EditProducts
+
+export function ErrorBoundary() {
+    const error = useRouteError();
+    <ProductError error={error} />
+}

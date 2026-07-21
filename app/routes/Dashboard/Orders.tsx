@@ -60,7 +60,8 @@ export async function action({ request }: Route.ActionArgs) {
                 if (!selected_Status) {
                     return { error: "Invalid status selected." }
                 }
-                console.log("orderId", orderId)
+                //console.log
+                ("orderId", orderId)
                 await service.edit(orderId, { status: selected_Status })
             } catch (e) {
                 console.error("Error while updadeing order Status", e)

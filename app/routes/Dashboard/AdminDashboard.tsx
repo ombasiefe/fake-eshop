@@ -5,12 +5,14 @@ import { Outlet, redirect } from 'react-router';
 import { getSession } from '~/session.server';
 import type { Route } from './+types/AdminDashboard'
 import { prisma } from "~/db.server"
+import ProductError from '../errors/Dashboard_Errors/ProductError';
+import DashboardError from '../errors/Dashboard_Errors/DashboardError';
 type Props = {}
 
 export async function loader({ request }: Route.LoaderArgs) {
     const sesion = await getSession(request.headers.get("Cookie"))
     const userId = sesion.get("userId")
-    console.log(userId)
+    //console.log(userId)
     if (!userId) {
         return redirect('/login');
     }
@@ -28,7 +30,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 
 
-function AdminDashboard({ loaderData }: Route.ComponentProps) {
+export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
     return (
         <div className="flex h-screen w-screen overflow-hidden">
 
@@ -46,4 +48,17 @@ function AdminDashboard({ loaderData }: Route.ComponentProps) {
     )
 }
 
-export default AdminDashboard
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+    return (
+        <div className="flex h-screen bg-gray-100 dark:bg-gray-950">
+            <Sidebar />
+            <div className="flex flex-1 flex-col overflow-hidden">
+                <Outlet />
+                <main className="flex-1 overflow-y-auto p-6">
+                    {/* Renders inside the layout content area */}
+                    <DashboardError error={error} />
+                </main>
+            </div>
+        </div>
+    );
+}

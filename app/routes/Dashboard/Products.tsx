@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/Products';
 
-import { Form, Link, redirect, useFetcher, } from 'react-router'
+import { data, Form, Link, redirect, useFetcher, useRouteError, } from 'react-router'
 import { prisma } from "~/db.server";
 import { ManuelProductStrategy } from '~/services/products/manual-product';
+import ProductError from '../errors/Dashboard_Errors/ProductError';
 
 type Props = {}
 
@@ -21,12 +22,14 @@ export async function loader({ request }: Route.LoaderArgs) {
             skip: (page - 1) * pageSize,
             take: pageSize
         });
-        if (Db_products.length == 0) {
-            console.log("No products in DB");
-        }
+
         return { products: Db_products, page, totalPages };
     } catch (e) {
-        return { products: [], page: 1, totalPages: 1 }
+        if (e instanceof Response) {
+            throw e
+        }
+        console.error("Error caused by: ", e)
+        throw new Response("Database error", { status: 500 });
     }
 }
 
@@ -36,9 +39,11 @@ export async function action({ request }: Route.ActionArgs) {
     const formData = await request.formData();
     const actionType = formData.get("action");
     if (!actionType) {
-        console.log("unknown action type");
+        //console.log
+        ("unknown action type");
     }
-    console.log(actionType)
+    //console.log
+    (actionType)
     switch (actionType) {
         case "get_products_from_API":
             try {
@@ -47,9 +52,11 @@ export async function action({ request }: Route.ActionArgs) {
                     throw new Response("Error fetching API", { status: response.status })
                 }
                 const apiProducts = await response.json();
-                //console.log(apiProducts);
+                ////console.log
+                (apiProducts);
                 const category_names = [...new Set(apiProducts.map((prod: any) => prod.category))] as string[]
-                console.log(category_names)
+                //console.log
+                (category_names)
                 await Promise.all(
                     category_names.map((name) =>
                         prisma.categories.upsert({
@@ -59,14 +66,15 @@ export async function action({ request }: Route.ActionArgs) {
                         })
                     )
                 )
-                console.log("the category inserted")
+                //console.log("the category inserted")
                 const categories = await prisma.categories.findMany({
                     where: {
                         name: { in: category_names }
                     }
                 });
 
-                // console.log(categories)
+                // //console.log
+                (categories)
 
 
                 const categoryMap = Object.fromEntries(categories.map(c => [c.name, c.id]))
@@ -87,11 +95,11 @@ export async function action({ request }: Route.ActionArgs) {
                     data: transformedData,
                     skipDuplicates: true,
                 })
-                //console.log("transfromed Data:", transformedData)
+                ////console.log("transfromed Data:", transformedData)
 
 
 
-                console.log("Products inserted successfully")
+                //console.log("Products inserted successfully")
             } catch (e) {
                 console.error("Product insert failed:", e)
             }
@@ -108,7 +116,7 @@ export async function action({ request }: Route.ActionArgs) {
             try {
                 const productId = Number(formData.get('prod_Id'));
                 if (!productId) return { error: "Product id not found " }
-                // console.log(productId)
+                // //console.log(productId)
 
                 service.delete(productId);
 
@@ -123,11 +131,11 @@ export async function action({ request }: Route.ActionArgs) {
 
 
 
-const Products = ({ actionData, loaderData }: Route.ComponentProps) => {
+export default function Products({ actionData, loaderData }: Route.ComponentProps) {
 
     const { products, totalPages, page } = loaderData;
     const fetcher = useFetcher();
-    //console.log("Products from db:", products)
+    ////console.log("Products from db:", products)
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null)
     return (
@@ -322,7 +330,8 @@ const Products = ({ actionData, loaderData }: Route.ComponentProps) => {
                                                         <button className="text-gray-500 transition-colors duration-200 dark:hover:text-red-500 dark:text-gray-300 hover:text-red-500 focus:outline-none"
                                                             type="button"
                                                             onClick={() => {
-                                                                console.log("delete clicked")
+                                                                //console.log
+                                                                ("delete clicked")
                                                                 setSelectedId(prod.id);
                                                                 setConfirmOpen(true);
                                                             }}
@@ -375,4 +384,6 @@ const Products = ({ actionData, loaderData }: Route.ComponentProps) => {
     )
 }
 
-export default Products
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+    return <ProductError error={error} />;
+}

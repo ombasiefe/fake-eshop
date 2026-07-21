@@ -14,15 +14,16 @@ export async function loader({ request }: Route.LoaderArgs) {
         const Db_categories = await prisma.categories.findMany()
         return { categories: Db_categories }
     } catch (e) {
-        console.error(e)
-        return { categories: [] }
+        // console.error(e)
+        // return { categories: [] }
+        throw new Response('No categori')
     }
 }
 
 export async function action({ request }: Route.ActionArgs) {
     const formData = await request.formData()
     const actionType = formData.get("action") as string
-    console.log("actionType:", actionType)
+    //console.log("actionType:", actionType)
     const service = new ManuelCategoryStrategy();
     switch (actionType) {
         case "add_new_category":
@@ -254,7 +255,8 @@ function Categories({ loaderData }: Route.ComponentProps) {
                                                         <button className="text-gray-500 transition-colors duration-200 dark:hover:text-red-500 dark:text-gray-300 hover:text-red-500 focus:outline-none"
                                                             type="button"
                                                             onClick={() => {
-                                                                console.log("delete clicked")
+                                                                //console.log
+                                                                ("delete clicked")
                                                                 setSelectedId(cat.id);
                                                                 setConfirmOpen(true);
                                                             }}

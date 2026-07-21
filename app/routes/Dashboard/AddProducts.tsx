@@ -30,7 +30,8 @@ export async function action({ params, request }: Route.ActionArgs) {
     let dbImagePath = '/uploads/default-placeholder.png'
 
     if (new_image && new_image.size > 0) {
-        console.log(new_image.size)
+        //console.log
+        (new_image.size)
         const fileExtension = path.extname(new_image.name) || ".jpg"
         const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}${fileExtension}`;
 
@@ -45,12 +46,14 @@ export async function action({ params, request }: Route.ActionArgs) {
 
         //getting the relative URL path that will be stored in DB 
         dbImagePath = `/uploads/${uniqueFileName}`;
-        console.log(dbImagePath)
+        //console.log
+        (dbImagePath)
 
     }
 
 
-    //console.log(new_visibility)
+    ////console.log
+    (new_visibility)
     const data = {
         title: new_title,
         image: dbImagePath,
@@ -59,7 +62,8 @@ export async function action({ params, request }: Route.ActionArgs) {
         description: new_description,
         categoryId: new_category
     }
-    console.log(data)
+        //console.log
+        (data)
     try {
         service.add({ name: data.title, description: data.description, price: data.price, image: data.image, categoryId: data.categoryId, isActive: data.isActive })
         return redirect("/admin/products");

@@ -11,7 +11,7 @@ import { useFetcher } from 'react-router'
 import { Card } from 'flowbite-react'
 
 import Cart from './Cart'
-import ProductError from '../errors/ProductError'
+import ProductError from '../errors/Eshop_Errors/ProductError'
 type Props = {}
 type CartItem = {
     productId: number;
@@ -31,14 +31,16 @@ export async function loader({ request }: Route.LoaderArgs) {
             }
         })
         const tot_pages = Math.max(1, Math.ceil(tot_products / pageSize));
-        //console.log(tot_pages)
+        ////console.log
+        (tot_pages)
 
         const Db_products = await prisma.products.findMany({
             where: { isActive: true },
             skip: (page - 1) * pageSize,
             take: pageSize
         });
-        //console.log(Db_products)
+        ////console.log
+        (Db_products)
         if (Db_products.length === 0) {
             //console.error("No products Found")
             throw new Response("Products not found", {
@@ -64,7 +66,8 @@ export async function action({ request }: Route.ActionArgs) {
     switch (actionType) {
         case "see_details":
             try {
-                // console.log("product:", prodId)
+                // //console.log
+                ("product:", prodId)
                 return redirect(`/products/${prodId}`)
 
             } catch (e) {
@@ -93,7 +96,8 @@ export default function Products({ loaderData }: Route.ComponentProps) {
                 productPrice: prodPrice,
                 quantity: 1,
             })
-            //console.log(cart)
+                ////console.log
+                (cart)
             localStorage.setItem("cart", JSON.stringify(cart))
             window.dispatchEvent(new Event("cartUpdated"))
         }

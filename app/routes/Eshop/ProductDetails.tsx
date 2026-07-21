@@ -2,7 +2,7 @@ import React from 'react'
 import type { Route } from './+types/ProductDetails'
 import { prisma } from '~/db.server'
 import { FaShoppingBasket } from 'react-icons/fa'
-import ProductError from '../errors/ProductError'
+import ProductError from '../errors/Eshop_Errors/ProductError'
 import { useRouteError } from 'react-router'
 
 type Props = {}
@@ -16,7 +16,8 @@ export async function loader({ params }: Route.LoaderArgs) {
         if (!product_details) {
             throw new Response('product not found with this id', { status: 404 })
         }
-        // console.log(product_details)
+        // //console.log
+        (product_details)
         return { product_details }
 
     } catch (e) {

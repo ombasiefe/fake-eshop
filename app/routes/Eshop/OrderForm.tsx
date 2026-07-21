@@ -38,7 +38,8 @@ export async function action({ request }: Route.ActionArgs) {
     const total_price = formData.get("total_price") as string
 
     const cart = JSON.parse(formData.get("cart") as string) as CartItem[]
-    //console.log(email, first_name, last_name, phone, total_price)
+    ////console.log
+    (email, first_name, last_name, phone, total_price)
     const resend = new Resend(process.env.RESEND_API_KEY)
     const session = await getSession(request.headers.get('Cookie'));
     const userId = Number(session.get('userId'))
@@ -54,7 +55,8 @@ export async function action({ request }: Route.ActionArgs) {
         })
 
         if (await new_order) {
-            console.log('New order added successfully !')
+            //console.log
+            ('New order added successfully !')
         }
         const productRows = cart
             .map(

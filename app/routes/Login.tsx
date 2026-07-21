@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs'
 type Props = {}
 
 import { getSession, commitSession, } from '~/session.server';
-import LoginError from './errors/LoginError'
+import LoginError from './errors/Eshop_Errors/LoginError'
 
 // export async function loader({ request, }: Route.LoaderArgs) {
 //     const session = await getSession(
