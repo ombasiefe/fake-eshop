@@ -3,11 +3,12 @@ import type { Route } from './+types/Orders'
 import { prisma } from "~/db.server"
 import prismaClientPkg from "@prisma/client"
 
-import { Form, useSubmit } from 'react-router'
+import { data, Form, useSubmit } from 'react-router'
 import { Button, Card, Select } from 'flowbite-react'
 import { MdCancel, MdDelete } from 'react-icons/md'
 
 import { ManuelOrderStrategy } from '~/services/orders/manual-order'
+import OrderError from '../errors/Eshop_Errors/OrderError'
 
 const { orders_Status } = prismaClientPkg
 type Props = {}
@@ -36,8 +37,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 
         return { orders: ordersWithTotal, statusOptions, error: null };
     } catch (e) {
-        console.error("An error occured:", e)
-        return { error: "Error while fetching orders !" }
+        if (e instanceof Response) {
+            throw e
+        }
+        throw data("DB connection Error:", { status: 500 })
     }
 }
 export async function action({ request }: Route.ActionArgs) {
@@ -60,8 +63,7 @@ export async function action({ request }: Route.ActionArgs) {
                 if (!selected_Status) {
                     return { error: "Invalid status selected." }
                 }
-                //console.log
-                ("orderId", orderId)
+                //console.log ("orderId", orderId)
                 await service.edit(orderId, { status: selected_Status })
             } catch (e) {
                 console.error("Error while updadeing order Status", e)
@@ -79,7 +81,7 @@ export async function action({ request }: Route.ActionArgs) {
             break;
     }
 }
-function Orders({ loaderData }: Route.ComponentProps) {
+export default function Orders({ loaderData }: Route.ComponentProps) {
     const orders = loaderData.orders
     const statusOptions = loaderData.statusOptions
     const submit = useSubmit();
@@ -216,4 +218,6 @@ function Orders({ loaderData }: Route.ComponentProps) {
     )
 }
 
-export default Orders
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+    return <OrderError error={error} />
+}

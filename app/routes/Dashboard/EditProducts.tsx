@@ -20,7 +20,7 @@ export async function loader({ params }: Route.LoaderArgs) {
             include: { category: true }
         })
         if (!product_details) {
-            console.error("Error fetching the product details from db")
+            //console.error("Error fetching the product details from db")
             throw new Response("Product not found ", { status: 404 })
         }
         return { product_details, Db_categories }
@@ -280,7 +280,6 @@ function EditProducts({ loaderData }: Route.ComponentProps) {
 
 export default EditProducts
 
-export function ErrorBoundary() {
-    const error = useRouteError();
-    <ProductError error={error} />
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+    return <ProductError error={error} />
 }

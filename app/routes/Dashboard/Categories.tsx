@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/Categories'
 import { prisma } from '~/db.server'
-import { useFetcher } from 'react-router'
+import { useFetcher, useRouteError } from 'react-router'
 import { Form } from 'react-router'
 import { IoMdCloseCircle } from "react-icons/io";
 
@@ -9,6 +9,7 @@ import { IoMdCloseCircle } from "react-icons/io";
 type Props = {}
 import { ManuelCategoryStrategy } from '~/services/categories/manual-category'
 import { Button, Card } from 'flowbite-react'
+import CategoryError from '../errors/Dashboard_Errors/CategoryError'
 export async function loader({ request }: Route.LoaderArgs) {
     try {
         const Db_categories = await prisma.categories.findMany()
@@ -16,7 +17,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     } catch (e) {
         // console.error(e)
         // return { categories: [] }
-        throw new Response('No categori')
+        throw new Response('No categories')
     }
 }
 
@@ -41,7 +42,7 @@ export async function action({ request }: Route.ActionArgs) {
             service.edit(CatId, { name: updatedName })
     }
 }
-function Categories({ loaderData }: Route.ComponentProps) {
+export default function Categories({ loaderData }: Route.ComponentProps) {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null)
 
@@ -291,5 +292,6 @@ function Categories({ loaderData }: Route.ComponentProps) {
         </section >
     )
 }
-
-export default Categories
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+    return <CategoryError error={error} />
+} 

@@ -18,6 +18,7 @@ if (!globalForPrisma.prisma) {
 prisma = globalForPrisma.prisma
 
 
+
 export async function getUserOrders({ user_id }: { user_id: number }) {
     try {
         const orders = await prisma.orders.findMany({

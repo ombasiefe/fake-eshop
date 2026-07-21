@@ -39,11 +39,9 @@ export async function action({ request }: Route.ActionArgs) {
     const formData = await request.formData();
     const actionType = formData.get("action");
     if (!actionType) {
-        //console.log
-        ("unknown action type");
+        //console.log("unknown action type");
     }
-    //console.log
-    (actionType)
+    //console.log(actionType)
     switch (actionType) {
         case "get_products_from_API":
             try {
@@ -52,11 +50,9 @@ export async function action({ request }: Route.ActionArgs) {
                     throw new Response("Error fetching API", { status: response.status })
                 }
                 const apiProducts = await response.json();
-                ////console.log
-                (apiProducts);
+                ////console.log(apiProducts);
                 const category_names = [...new Set(apiProducts.map((prod: any) => prod.category))] as string[]
-                //console.log
-                (category_names)
+                //console.log(category_names)
                 await Promise.all(
                     category_names.map((name) =>
                         prisma.categories.upsert({
@@ -73,8 +69,7 @@ export async function action({ request }: Route.ActionArgs) {
                     }
                 });
 
-                // //console.log
-                (categories)
+                // //console.log(categories)
 
 
                 const categoryMap = Object.fromEntries(categories.map(c => [c.name, c.id]))
@@ -385,5 +380,5 @@ export default function Products({ actionData, loaderData }: Route.ComponentProp
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-    return <ProductError error={error} />;
+    return < ProductError error={error} />
 }

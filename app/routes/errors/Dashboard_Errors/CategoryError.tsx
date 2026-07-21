@@ -25,7 +25,7 @@ export default function CategoryError({ error }: Props) {
     }
 
     if (error instanceof Error) {
-        title = "Unexpected error";
+        title = "Unexpected error Category";
         message = error.message;
     }
 
