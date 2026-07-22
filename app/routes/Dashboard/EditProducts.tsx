@@ -21,14 +21,14 @@ export async function loader({ params }: Route.LoaderArgs) {
         })
         if (!product_details) {
             //console.error("Error fetching the product details from db")
-            throw new Response("Product not found ", { status: 404 })
+            throw data("Product not found ", { status: 404 })
         }
         return { product_details, Db_categories }
     } catch (e) {
         if (e instanceof Response) {
             throw e;
         }
-        throw new Response('Server Communication failed', { status: 500 })
+        throw data('Server Communication failed', { status: 500 })
     }
 }
 export async function action({ params, request }: Route.ActionArgs) {
@@ -89,7 +89,7 @@ export async function action({ params, request }: Route.ActionArgs) {
         return redirect("/admin/products");
     } catch (e) {
         console.error('An error occured while editing product:', e)
-        throw new Response('Product editing error !', { status: 500 })
+        throw data('Product editing error !', { status: 500 })
     }
 
 

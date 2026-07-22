@@ -9,6 +9,8 @@ import { redirect } from 'react-router';
 import { HiShoppingCart } from 'react-icons/hi';
 import { Button } from 'flowbite-react';
 import { ManuelOrderStrategy } from '~/services/orders/manual-order';
+import { ResendEmailerStrategy } from '~/services/email/resend-emailer';
+import { GmailEmailerStrategy } from '~/services/email/gmail-emailer';
 export
     type Props = {}
 type CartItem = {
@@ -38,14 +40,14 @@ export async function action({ request }: Route.ActionArgs) {
     const total_price = formData.get("total_price") as string
 
     const cart = JSON.parse(formData.get("cart") as string) as CartItem[]
-    ////console.log
-    (email, first_name, last_name, phone, total_price)
-    const resend = new Resend(process.env.RESEND_API_KEY)
+    ////console.log(email, first_name, last_name, phone, total_price)
     const session = await getSession(request.headers.get('Cookie'));
     const userId = Number(session.get('userId'))
     const service = new ManuelOrderStrategy()
+    const resend_email_service = new ResendEmailerStrategy
+    const gmail_service = new GmailEmailerStrategy
     try {
-        const new_order = service.add({
+        const new_order = await service.add({
             email: email, tel: phone, userId: userId, address: address, firstName: first_name, lastName: last_name, postalCode: postal_code,
             items: cart.map(item => ({
                 productId: item.productId,
@@ -54,7 +56,7 @@ export async function action({ request }: Route.ActionArgs) {
             }))
         })
 
-        if (await new_order) {
+        if (new_order) {
             //console.log
             ('New order added successfully !')
         }
@@ -70,154 +72,20 @@ export async function action({ request }: Route.ActionArgs) {
     `
             )
             .join("");
-        await resend.emails.send({
-            from: "onboarding@resend.dev",
-            to: "efe127652@gmail.com",
-            subject: `🛒 New Order from ${first_name} ${last_name}`,
-            html: `
-<!DOCTYPE html>
-<html>
-<head>
-<style>
-body{
-    font-family:Arial,sans-serif;
-    background:#f4f4f4;
-    padding:30px;
-}
+        resend_email_service.send({
+            first_name, last_name, email, phone, address,
+            postal_code,
+            total_price: Number(total_price),
+            productRows: productRows as any
+        })
 
-.container{
-    max-width:700px;
-    margin:auto;
-    background:#fff;
-    border-radius:10px;
-    padding:30px;
-    box-shadow:0 3px 10px rgba(0,0,0,.1);
-}
-
-h1{
-    color:#2563eb;
-    margin-bottom:25px;
-}
-
-.section{
-    margin-bottom:25px;
-}
-
-.info-table{
-    width:100%;
-    border-collapse:collapse;
-}
-
-.info-table td{
-    padding:8px;
-    border-bottom:1px solid #eee;
-}
-
-.products{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:15px;
-}
-
-.products th{
-    background:#2563eb;
-    color:white;
-    padding:10px;
-}
-
-.products td{
-    padding:10px;
-    border-bottom:1px solid #ddd;
-}
-
-.total{
-    margin-top:25px;
-    text-align:right;
-    font-size:20px;
-    font-weight:bold;
-}
-
-.footer{
-    margin-top:30px;
-    color:#777;
-    font-size:14px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-<h1>🛒 New Order Received</h1>
-
-<div class="section">
-
-<h2>Customer Details</h2>
-
-<table class="info-table">
-<tr>
-<td><strong>Name</strong></td>
-<td>${first_name} ${last_name}</td>
-</tr>
-
-<tr>
-<td><strong>Email</strong></td>
-<td>${email}</td>
-</tr>
-
-<tr>
-<td><strong>Phone</strong></td>
-<td>${phone}</td>
-</tr>
-
-<tr>
-<td><strong>Address</strong></td>
-<td>${address}</td>
-</tr>
-
-<tr>
-<td><strong>Postal Code</strong></td>
-<td>${postal_code}</td>
-</tr>
-
-</table>
-
-</div>
-
-<h2>Ordered Products</h2>
-
-<table class="products">
-
-<thead>
-<tr>
-<th>Product</th>
-<th>Qty</th>
-<th>Price</th>
-<th>Subtotal</th>
-</tr>
-</thead>
-
-<tbody>
-${productRows}
-</tbody>
-
-</table>
-
-<div class="total">
-Total: €${Number(total_price).toFixed(2)}
-</div>
-
-<div class="footer">
-Order generated from your webshop.
-</div>
-
-</div>
-
-</body>
-</html>
-`,
-        });
+        gmail_service.send({
+            customerEmail: email,
+            customerName: first_name,
+            orderId: (new_order as any)?.id ?? (new_order as any)?.orderId,
+            totalAmount: Number(total_price),
+            ProductRows: cart
+        })
 
         return redirect("/products?success=true")
     } catch (eror) {

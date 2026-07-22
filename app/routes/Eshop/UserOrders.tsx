@@ -3,7 +3,7 @@ import { getUserId } from '~/session.server'
 import type { Route } from './+types/UserOrders'
 import { getUserOrders, prisma } from '~/db.server';
 import { Button, Card, Badge } from 'flowbite-react';
-import { Form, useNavigation, useRouteError } from 'react-router';
+import { data, Form, useNavigation, useRouteError } from 'react-router';
 import { MdCancel, MdLocalPhone, MdOutlineEmail, MdOutlineLocationOn } from 'react-icons/md';
 import prismaClientPkg from "@prisma/client"
 import { ManuelOrderStrategy } from '~/services/orders/manual-order';
@@ -18,7 +18,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     try {
         const Orders = await getUserOrders({ user_id: userId });
         if (!Orders.orders) {
-            throw new Response('User orders not found', { status: 404 })
+            throw data('User orders not found', { status: 404 })
         }
         return { orders: Orders }
     } catch (e) {
@@ -26,7 +26,7 @@ export async function loader({ request }: Route.LoaderArgs) {
             throw e;
         }
         console.error("Error caused by: ", e)
-        throw new Response("Database error", {
+        throw data("Database error", {
             status: 500,
         });
     }

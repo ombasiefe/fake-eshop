@@ -14,7 +14,7 @@ export async function loader({ params }: Route.LoaderArgs) {
             where: { id: prod_Id, isActive: true }
         })
         if (!product_details) {
-            throw new Response('product not found with this id', { status: 404 })
+            throw data('product not found with this id', { status: 404 })
         }
         // //console.log
         (product_details)
@@ -25,7 +25,7 @@ export async function loader({ params }: Route.LoaderArgs) {
             throw e;
         }
         console.error("Error caused by: ", e)
-        throw new Response("Database error", {
+        throw data("Database error", {
             status: 500,
         });
     }

@@ -17,7 +17,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     } catch (e) {
         // console.error(e)
         // return { categories: [] }
-        throw new Response('No categories')
+        throw data('No categories')
     }
 }
 

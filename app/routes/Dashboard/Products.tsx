@@ -29,7 +29,7 @@ export async function loader({ request }: Route.LoaderArgs) {
             throw e
         }
         console.error("Error caused by: ", e)
-        throw new Response("Database error", { status: 500 });
+        throw data("Database error", { status: 500 });
     }
 }
 
@@ -47,7 +47,7 @@ export async function action({ request }: Route.ActionArgs) {
             try {
                 const response = await fetch("https://fakestoreapi.com/products");
                 if (!response.ok) {
-                    throw new Response("Error fetching API", { status: response.status })
+                    throw data("Error fetching API", { status: response.status })
                 }
                 const apiProducts = await response.json();
                 ////console.log(apiProducts);

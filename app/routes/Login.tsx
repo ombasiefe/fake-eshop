@@ -37,7 +37,7 @@ export async function action({ request }: Route.ActionArgs) {
             where: { email },
         })
         if (!Db_user) {
-            throw new Response('User not found', { status: 404 })
+            throw data('User not found', { status: 404 })
 
         }
         const result = await bcrypt.compare(password, Db_user.password)
@@ -65,7 +65,7 @@ export async function action({ request }: Route.ActionArgs) {
             throw error;
         }
         console.error("Error caused by: ", error)
-        throw new Response("Database error", {
+        throw data("Database error", {
             status: 500,
         });
     }

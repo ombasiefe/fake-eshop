@@ -7,7 +7,7 @@ export class ManuelProductStrategy implements ProductsStrategy {
             where: { title: data.name }
         })
         if (existing) {
-            throw new Response("A Product with this name already exist.")
+            throw data("A Product with this name already exist.")
 
         }
         return await prisma.products.create({

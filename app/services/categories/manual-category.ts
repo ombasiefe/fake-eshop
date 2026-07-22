@@ -7,7 +7,7 @@ export class ManuelCategoryStrategy implements CategoriesStrategy {
             where: { name: data.name }
         })
         if (existing) {
-            throw new Response("A category with this name already exist.")
+            throw data("A category with this name already exist.")
 
         }
         return await prisma.categories.create({
@@ -25,7 +25,7 @@ export class ManuelCategoryStrategy implements CategoriesStrategy {
     async delete(id: number) {
         const prodCount = await prisma.products.count({ where: { categoryId: id } })
         if (prodCount > 0) {
-            throw new Response("Cannot delete category: It still contains active products.")
+            throw data("Cannot delete category: It still contains active products.")
         }
         return await prisma.categories.delete({
             where: { id }
