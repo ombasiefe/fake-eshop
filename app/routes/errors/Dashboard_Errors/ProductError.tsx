@@ -33,8 +33,8 @@ export default function ProductError({ error }: Props) {
         }
     } else if (error instanceof Error) {
         // Changed to `else if` so it doesn't overwrite RouteErrorResponse values
-        title = "Unexpected error Pro";
-        message = error.message;
+        title = "Unexpected error ";
+        //message = error.message;
     }
 
     return (

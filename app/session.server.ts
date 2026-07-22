@@ -1,5 +1,5 @@
 import path from "path";
-import { createCookieSessionStorage } from "react-router";
+import { createCookieSessionStorage, redirect } from "react-router";
 type SessionData = {
     userId: string;
 }
@@ -27,5 +27,21 @@ export async function getUserId(request: Request): Promise<number | null> {
     const userId = session.get("userId");
     if (!userId) return null;
     return Number(userId);
+}
+export async function adminLogout(request: Request) {
+    const session = await getSession(
+        request.headers.get("Cookie"),
+    );
+    if (session) {
+        return redirect("/login", {
+            headers: {
+                "Set-Cookie": await destroySession(session),
+            },
+        });
+    } else {
+        return redirect('/logout')
+    }
+
+
 }
 export { getSession, commitSession, destroySession };

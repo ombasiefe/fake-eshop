@@ -1,27 +1,23 @@
 import React from 'react'
-import { Form, type ActionFunctionArgs } from 'react-router'
+import { data, Form, type ActionFunctionArgs } from 'react-router'
 import { AdminSidebar as Sidebar } from './AdminSidebar';
 import { Outlet, redirect } from 'react-router';
-import { getSession } from '~/session.server';
+import { getUserId } from '~/session.server';
 import type { Route } from './+types/AdminDashboard'
-import { prisma } from "~/db.server"
+import { isAdminCheck } from "~/db.server"
 import DashboardError from '../errors/Dashboard_Errors/DashboardError';
 type Props = {}
 
 export async function loader({ request }: Route.LoaderArgs) {
-    const session = await getSession(request.headers.get("Cookie"));
-    const userId = session.get("userId");
+    const userId = await getUserId(request);
     if (!userId) return redirect('/login');
 
     try {
-        const user = await prisma.user.findUnique({
-            where: { id: Number(userId), isAdmin: true }
-        });
-        if (!user?.isAdmin) return redirect('/login');
-        return { user };
+        const admin = isAdminCheck(userId)
+        if (!admin) return redirect('/login');
+        return { admin };
     } catch (e) {
-        console.error("Admin check failed:", e);
-        return null;
+        throw data('admin check failed');
     }
 }
 export async function action({ request }: ActionFunctionArgs) {
@@ -49,6 +45,5 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-    console.log("=== LAYOUT BOUNDARY ===", error);
-    return <h1 style={{ color: 'red' }}>LAYOUT</h1>;
+    return <DashboardError error={error} />
 }

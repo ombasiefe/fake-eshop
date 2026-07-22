@@ -3,7 +3,7 @@ import type { Route } from './+types/Home'
 import { getSession } from '~/session.server'
 import { redirect } from 'react-router'
 import OrdersLineChart from './Charts/OrdersLineChart'
-import { prisma } from '~/db.server'
+import { getCategoriesChartData, getOrderStatusChartData, getRawChartData } from '~/db.server'
 import Categories from './Categories'
 import CategoriesPieChart from './Charts/CategoriesPieChart'
 import { Card } from 'flowbite-react'
@@ -17,11 +17,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         return redirect('/login');
     }
     try {
-        const rawChartdata = await prisma.orderschartdata.findMany({
-            orderBy: {
-                date: 'asc'
-            }
-        });
+        const rawChartdata = (await getRawChartData()).data
         const ordersChartData = rawChartdata.map(item => {
             const dateObj = item.date ? new Date(item.date) : new Date(0);
             return {
@@ -31,12 +27,12 @@ export async function loader({ request }: Route.LoaderArgs) {
             }
 
         });
-        const categoriesChartData = await prisma.productsbycategorychartdata.findMany();
+        const categoriesChartData = (await getCategoriesChartData()).data;
         const productsByCategory = categoriesChartData.map(prod_cat => ({
             name: prod_cat.name,
             counts: Number(prod_cat.count)
         }))
-        const orderStatusChart = await prisma.orderstatuschart.findMany();
+        const orderStatusChart = (await getOrderStatusChartData()).data;
         const orderStatusChartData = orderStatusChart.map(order_stat => ({
             Status: String(order_stat.Status),
             count: Number(order_stat.count)

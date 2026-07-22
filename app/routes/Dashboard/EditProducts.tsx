@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/EditProducts';
-import { Form, redirect, useLoaderData, useRouteError } from 'react-router'
+import { data, Form, redirect, useLoaderData, useRouteError } from 'react-router'
 import { prisma } from '~/db.server'
 import { HiOutlineSave } from 'react-icons/hi';
 import path from 'path';
@@ -67,7 +67,7 @@ export async function action({ params, request }: Route.ActionArgs) {
         //console.log(db_Images_path)
     }
 
-    const data = {
+    const prod_data = {
         id: prod_Id,
         title: new_title,
         image: db_Images_path,
@@ -78,13 +78,13 @@ export async function action({ params, request }: Route.ActionArgs) {
     }
     //console.log(data)
     try {
-        service.edit(data.id, {
-            name: data.title,
-            description: data.description,
-            price: data.price,
-            image: data.image,
-            categoryId: data.categoryId,
-            isActive: data.isActive
+        service.edit(prod_data.id, {
+            name: prod_data.title,
+            description: prod_data.description,
+            price: prod_data.price,
+            image: prod_data.image,
+            categoryId: prod_data.categoryId,
+            isActive: prod_data.isActive
         })
         return redirect("/admin/products");
     } catch (e) {

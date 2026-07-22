@@ -1,5 +1,5 @@
 import React from 'react'
-import { redirect } from "react-router";
+import { data, redirect } from "react-router";
 
 type Props = {}
 

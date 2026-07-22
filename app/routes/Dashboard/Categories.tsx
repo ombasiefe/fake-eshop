@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/Categories'
-import { prisma } from '~/db.server'
-import { useFetcher, useRouteError } from 'react-router'
+import { getCategories } from '~/db.server'
+import { data, useFetcher, useRouteError } from 'react-router'
 import { Form } from 'react-router'
 import { IoMdCloseCircle } from "react-icons/io";
 
@@ -12,8 +12,8 @@ import { Button, Card } from 'flowbite-react'
 import CategoryError from '../errors/Dashboard_Errors/CategoryError'
 export async function loader({ request }: Route.LoaderArgs) {
     try {
-        const Db_categories = await prisma.categories.findMany()
-        return { categories: Db_categories }
+        const Db_categories = await getCategories()
+        return { categories: Db_categories.data }
     } catch (e) {
         // console.error(e)
         // return { categories: [] }

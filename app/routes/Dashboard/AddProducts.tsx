@@ -52,8 +52,7 @@ export async function action({ params, request }: Route.ActionArgs) {
     }
 
 
-    ////console.log
-    (new_visibility)
+    ////console.log(new_visibility)
     const data = {
         title: new_title,
         image: dbImagePath,
@@ -62,8 +61,7 @@ export async function action({ params, request }: Route.ActionArgs) {
         description: new_description,
         categoryId: new_category
     }
-        //console.log
-        (data)
+    //console.log(data)
     try {
         service.add({ name: data.title, description: data.description, price: data.price, image: data.image, categoryId: data.categoryId, isActive: data.isActive })
         return redirect("/admin/products");

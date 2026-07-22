@@ -1,6 +1,7 @@
 import "dotenv/config"
 import { PrismaMariaDb } from "@prisma/adapter-mariadb"
 import { orders_Status, PrismaClient } from "@prisma/client";
+import { data } from "react-router";
 
 const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined;
@@ -77,6 +78,165 @@ export async function ContactFormSubmit({ email, name, surname, tel, contact_rea
 
     }
 }
+//----------Dashboard----------------
+//Admin Products 
+export async function getProducts(page: number, pageSize: number, totalPages: number) {
+    try {
+        const Db_products = await prisma.products.findMany({
+            include: { category: true },
+            skip: (page - 1) * pageSize,
+            take: pageSize
+        });
+
+        return { data: Db_products };
+    } catch (e) {
+        if (e instanceof Response) {
+            throw e
+        }
+        console.error("Error caused by: ", e)
+        throw data("Database error", { status: 500 });
+    }
+
+}
+export async function addProducts_from_api(apiProducts: any) {
+    try {
+        const category_names = [...new Set(apiProducts.map((prod: any) => prod.category))] as string[]
+        //console.log(category_names)
+        await Promise.all(
+            category_names.map((name) =>
+                prisma.categories.upsert({
+                    where: { name: name },
+                    update: {},
+                    create: { name: name },
+                })
+            )
+        )
+        //console.log("the category inserted")
+        const categories = await prisma.categories.findMany({
+            where: {
+                name: { in: category_names }
+            }
+        });
+        // //console.log(categories)
+        const categoryMap = Object.fromEntries(categories.map(c => [c.name, c.id]))
+        const transformedData = apiProducts.map((item: any) => {
+            const catId = categoryMap[item.category.trim()];
+            if (!catId) {
+                throw new Error(`Category ID mapping failed for category: ${item.category}`)
+            }
+            return {
+                title: item.title,
+                description: item.description,
+                price: item.price,
+                image: item.image,
+                categoryId: catId
+            }
+        })
+        await prisma.products.createMany({
+            data: transformedData,
+            skipDuplicates: true,
+        })
+        ////console.log("transfromed Data:", transformedData)
+
+        //console.log("Products inserted successfully")
+    } catch (e) {
+        console.error("Product insert failed:", e)
+    }
+}
+export async function addProduct_manually(data: { name: string, description: string, price: number, image: string, categoryId: number, isActive: boolean }) {
+    await prisma.products.create({
+        data: {
+            title: data.name.trim(),
+            description: data.description.trim(),
+            price: data.price,
+            image: data.image.trim(),
+            categoryId: data.categoryId,
+            isActive: data.isActive
+        }
+    })
+
+}
+export async function editProduct(id: number, data: { name: string, description: string, price: number, image: string, categoryId: number, isActive: boolean }) {
+    await prisma.products.upsert({
+        where: { id },
+        update: {
+            title: data.name.trim(),
+            description: data.description.trim(),
+            price: data.price,
+            image: data.image.trim(),
+            isActive: data.isActive,
+            categoryId: data.categoryId
+        },
+        create: {
+            title: data.name.trim(),
+            description: data.description.trim(),
+            price: data.price,
+            image: data.image.trim(),
+            isActive: data.isActive,
+            categoryId: data.categoryId
+        }
+    })
+}
+export async function deleteProduct(id: number) {
+    await prisma.products.delete({
+        where: { id }
+    })
+}
+//Admin Dashboard 
+export async function isAdminCheck(userId: number) {
+    const admin = await prisma.user.findUnique({
+        where: { id: Number(userId), isAdmin: true }
+    });
+    return { Admin: admin?.isAdmin }
+}
+// Admin Categories
+export async function getCategories() {
+    const categories = await prisma.categories.findMany()
+    return { data: categories }
+}
+
+export async function addCategory(name: string) {
+    await prisma.categories.create({
+        data: {
+            name: data.name.trim()
+        }
+    })
+}
+
+export async function editCategory(id: number, name: string) {
+    await prisma.categories.update({
+        where: { id },
+        data: { name: data.name.trim() }
+    })
+}
+export async function deleteCategory(id: number) {
+    const prodCount = await prisma.products.count({ where: { categoryId: id } })
+    if (prodCount > 0) {
+        throw new Response("Cannot delete category: It still contains active products.")
+    }
+    await prisma.categories.delete({
+        where: { id }
+    })
+}
+//Admin Dashboard Charts data
+export async function getRawChartData() {
+    const data = await prisma.orderschartdata.findMany({
+        orderBy: {
+            date: 'asc'
+        }
+    });
+    return { data }
+}
+export async function getCategoriesChartData() {
+    const data = await prisma.productsbycategorychartdata.findMany();
+    return { data }
+}
+
+export async function getOrderStatusChartData() {
+    const data = await prisma.orderstatuschart.findMany();
+    return { data }
+}
+// Admin notifications 
 export async function getNotifications() {
     try {
         const notifications = await prisma.notifications.findMany({
@@ -101,6 +261,11 @@ export async function setAdminNotificationRead({ notificationId }: { notificatio
         console.error("An error occured while updating the notification read status", e)
         return { success: false }
     }
+}
+
+//Admin orders 
+export async function getAdminOrders() {
+
 }
 
 export { prisma }
