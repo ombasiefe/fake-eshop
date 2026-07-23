@@ -59,7 +59,11 @@ function Navbar({ }: Props) {
                 <div className="flex md:order-2 items-center gap-2" >
                     <Button
                         color="light"
-                        onClick={() => setIsCartOpen(true)}
+                        onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setIsCartOpen(true)
+                        }}
                         className="relative"
                     >
                         <AiOutlineShopping className="text-2xl" />
@@ -72,7 +76,11 @@ function Navbar({ }: Props) {
 
                     {/* Only show the profile button if a user is logged in */}
                     {user ? (
-                        <Avatar onClick={() => setProfileOpen(true)} rounded
+                        <Avatar onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setProfileOpen(true)
+                        }} rounded
                         >
                         </Avatar>
 

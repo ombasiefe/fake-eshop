@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/EditProducts';
 import { data, Form, redirect, useLoaderData, useRouteError } from 'react-router'
-import { prisma } from '~/db.server'
+import { getCategories, getUniqueProduct, prisma } from '~/db.server'
 import { HiOutlineSave } from 'react-icons/hi';
 import path from 'path';
 import fs from "fs/promises"
@@ -14,11 +14,8 @@ export async function loader({ params }: Route.LoaderArgs) {
     //console.log (product_id);
 
     try {
-        const Db_categories = await prisma.categories.findMany();
-        const product_details = await prisma.products.findUnique({
-            where: { id: product_id },
-            include: { category: true }
-        })
+        const Db_categories = (await getCategories()).data;
+        const product_details = await getUniqueProduct(product_id)
         if (!product_details) {
             //console.error("Error fetching the product details from db")
             throw data("Product not found ", { status: 404 })

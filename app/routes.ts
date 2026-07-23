@@ -26,7 +26,8 @@ export default [
         route("admin/products/add_product", "routes/Dashboard/AddProducts.tsx"),
         route("admin/products/:id", "routes/Dashboard/EditProducts.tsx"),
         route("admin/orders", "routes/Dashboard/Orders.tsx"),
-        route("admin/notifications", "routes/Dashboard/Notifications.tsx")
+        route("admin/notifications", "routes/Dashboard/Notifications.tsx"),
+        route("admin/notifications/:id", "routes/Dashboard/ReplyNotification.tsx")
     ])
 
 ] satisfies RouteConfig;

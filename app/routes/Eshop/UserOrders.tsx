@@ -45,9 +45,9 @@ export async function action({ request }: Route.ActionArgs) {
             if (currentStatus?.Status == "pending") {
                 try {
                     const updated_user = await service.edit(order_id, { status: orders_Status.canceled })
-                    if (updated_user.Status === "canceled") {
-                        //console.log
-                        ("order cancelled successfully !")
+                    console.log("updated user=", updated_user)
+                    if (updated_user.data.Status === "canceled") {
+                        //console.log("order cancelled successfully !")
                         return { success: true }
                     }
                 } catch (e) {

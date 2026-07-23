@@ -1,36 +1,31 @@
 import React, { useState } from 'react'
 import { Popover, Button, Avatar } from 'flowbite-react'
 import { redirect, useLoaderData, type LoaderFunctionArgs } from 'react-router'
-import { getSession } from '~/session.server'
-import { prisma } from "~/db.server"
+import { getUserId } from '~/session.server'
+import { findUser, prisma } from "~/db.server"
 import { Drawer, DrawerHeader, DrawerItems } from 'flowbite-react'
 type Props = {}
 export async function loader({ request }: LoaderFunctionArgs) {
     try {
-        const session = await getSession(request.headers.get('Cookie'));
-        const userId = Number(session.get('userId'))
+
+        const userId = await getUserId(request)
         if (!userId) {
             return redirect('/login');
         }
 
-        const user = await prisma.user.findUnique({
-            where: {
-                id: userId
-            }
-        })
+        const user = await findUser(userId)
         if (!user) {
             console.error("user not found !")
         }
 
         return { user: user }
     } catch (e) {
-        console.error("An error occured while loading this page:", e)
+        console.error("An error occured while loading user Profile page:", e)
     }
 }
 function UserProfile() {
     return (
         <>
-
         </>
     );
 }

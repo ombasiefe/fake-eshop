@@ -3,7 +3,7 @@ import type { Route } from './+types/EshopHome';
 
 import React from 'react'
 import { data, redirect } from 'react-router'
-import { prisma } from "~/db.server"
+import { getEshopHomeProducts } from "~/db.server"
 
 import { Button, Card, Carousel } from 'flowbite-react';
 
@@ -11,12 +11,8 @@ type Props = {}
 
 export async function loader({ request }: Route.LoaderArgs) {
   try {
-    const products = await prisma.products.findMany({
-      where: { isActive: true },
-      take: 5
-    });
-    ////console.log
-    (products)
+    const products = await getEshopHomeProducts()
+    ////console.log(products)
     if (products.length === 0) {
       console.error("No products Found")
     }
@@ -33,8 +29,7 @@ export async function action({ request }: Route.ActionArgs) {
   switch (actionType) {
     case "see_details":
       try {
-        ////console.log
-        ("product:", prodId)
+        ////console.log("product:", prodId)
         return redirect(`/products/${prodId}`)
       } catch (e) {
         console.error("Could not redirect to product details page:", e)
@@ -43,7 +38,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 function EshopHome({ loaderData }: Route.ComponentProps) {
-  const userPrducts = loaderData;
+  const userPrducts = loaderData.products;
 
 
   return (
@@ -82,7 +77,7 @@ function EshopHome({ loaderData }: Route.ComponentProps) {
 
       <div className='flex justify-around flex-wrap gap-4 '>
 
-        {userPrducts.products?.map((prod) => (
+        {userPrducts?.map((prod) => (
           <Card
             className="max-w-sm"
             imgAlt={prod?.title}

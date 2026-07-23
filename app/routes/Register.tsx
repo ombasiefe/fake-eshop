@@ -1,8 +1,8 @@
 import React from 'react'
 import { Form, redirect } from 'react-router'
 import type { Route } from "./+types/Register"
-import { prisma } from '~/db.server'
-import bcrypt from "bcryptjs";
+import { DoesUserExist } from '~/db.server'
+import { UserRegister } from '~/session.server';
 type Props = {}
 
 export async function action({ request }: Route.ActionArgs) {
@@ -15,22 +15,12 @@ export async function action({ request }: Route.ActionArgs) {
 
 
     try {
-        const existingUser = await prisma.user.findUnique({
-            where: { email: new_email }
-        })
+        const existingUser = await DoesUserExist(new_email);
         if (existingUser) {
             return { error: "A user with this email already exists." };
-
         }
-        const hashedPassword = await bcrypt.hash(new_password, 10)
-        const new_User = await prisma.user.create({
-            data: {
-                email: new_email,
-                password: hashedPassword
-            }
-        })
-
-        return { message: "Registration completed successfully !" }
+        const message = (await UserRegister(new_email, new_password)).message
+        return { message }
 
     } catch (error) {
         console.error("Error while registering a new user occured:", error)
@@ -45,8 +35,8 @@ function Register({ actionData }: Route.ComponentProps) {
             <div className="px-6 py-4">
                 <div className="flex justify-center mx-auto">
                     <img
-                        className="w-auto h-7 sm:h-8"
-                        src="https://merakiui.com/images/logo.svg"
+                        className=" w-25 rounded-md"
+                        src="/carousel_images/Oura_Navbar_Logo_2.png"
                         alt=""
                     />
                 </div>

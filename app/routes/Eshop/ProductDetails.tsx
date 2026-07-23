@@ -3,7 +3,7 @@ import type { Route } from './+types/ProductDetails'
 import { prisma } from '~/db.server'
 import { FaShoppingBasket } from 'react-icons/fa'
 import ProductError from '../errors/Eshop_Errors/ProductError'
-import { useRouteError } from 'react-router'
+import { data, useRouteError } from 'react-router'
 
 type Props = {}
 export async function loader({ params }: Route.LoaderArgs) {
@@ -41,14 +41,8 @@ export default function ProductDetails({ loaderData }: Route.ComponentProps) {
                 <h2 className='text-2xl'>{prod_infos.product_details?.title}</h2>
                 <p>{prod_infos.product_details?.description}</p>
                 <div className='flex items-center '>
-                    <span className='text-xl'>{prod_infos.product_details?.price.toFixed(2)}€</span>
-                    <button type='submit'
-                        className=' border p-1.5 rounded-xl bg-black hover:bg-white hover:text-black cursor-pointer mx-4'>
-                        <div className='flex '>
-                            <FaShoppingBasket className='text-xl' />
-                            <span className='mx-1'>Add to cart</span>
-                        </div>
-                    </button>
+                    <span className='text-2xl'>{prod_infos.product_details?.price.toFixed(2)}€</span>
+
                 </div>
             </div>
 

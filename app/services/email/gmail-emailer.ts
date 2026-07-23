@@ -13,4 +13,5 @@ export class GmailEmailerStrategy implements EmailStrategy {
             items: data.ProductRows
         })
     }
+
 }

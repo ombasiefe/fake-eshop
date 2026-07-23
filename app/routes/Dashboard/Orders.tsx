@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/Orders'
-import { prisma } from "~/db.server"
+import { getAdminOrders } from "~/db.server"
 import prismaClientPkg from "@prisma/client"
 
 import { data, Form, useSubmit } from 'react-router'
@@ -15,20 +15,13 @@ type Props = {}
 
 export async function loader({ request }: Route.LoaderArgs) {
     try {
-        const orders = await prisma.orders.findMany({
-            include: {
-                items: {
-                    include: { products: true }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
-        })
+        const orders = await getAdminOrders();
         const statusOptions = Object.values(orders_Status);
-        if (orders.length == 0) {
+        if (orders.data.length == 0) {
             return { orders: [], error: "No orders found !" }
         }
 
-        const ordersWithTotal = orders.map(order => {
+        const ordersWithTotal = orders.data.map(order => {
             const totalPrice = order.items.reduce((sum, item) => {
                 return sum + item.price * item.quantity;
             }, 0)
@@ -72,7 +65,6 @@ export async function action({ request }: Route.ActionArgs) {
             break;
         case "delete_this_order":
             try {
-
                 await service.delete(orderId)
             } catch (e) {
                 console.error("Error while deleting the order", e)

@@ -2,7 +2,7 @@ import { error } from 'console'
 import React, { useEffect, useState } from 'react'
 import type { Route } from './+types/Products'
 import { data, isRouteErrorResponse, redirect, useRouteError, useSearchParams } from 'react-router'
-import { prisma } from "~/db.server"
+import { getEshopProducts, prisma } from "~/db.server"
 import { Form } from 'react-router'
 import { FaShoppingBasket } from 'react-icons/fa'
 import { BsArrowDownRightCircle } from 'react-icons/bs'
@@ -34,14 +34,9 @@ export async function loader({ request }: Route.LoaderArgs) {
         ////console.log
         (tot_pages)
 
-        const Db_products = await prisma.products.findMany({
-            where: { isActive: true },
-            skip: (page - 1) * pageSize,
-            take: pageSize
-        });
-        ////console.log
-        (Db_products)
-        if (Db_products.length === 0) {
+        const Db_products = await getEshopProducts(page, pageSize)
+        ////console.log(Db_products)
+        if (Db_products.products.length === 0) {
             //console.error("No products Found")
             throw data("Products not found", {
                 status: 404,
@@ -116,7 +111,7 @@ export default function Products({ loaderData }: Route.ComponentProps) {
         <>
             <div className='flex flex-col  justify-around'>
                 <div className='flex justify-around flex-wrap gap-4 '>
-                    {products?.map((prod) => (
+                    {products.products?.map((prod) => (
                         <Card
                             className="max-w-sm"
                             imgAlt={prod?.title}

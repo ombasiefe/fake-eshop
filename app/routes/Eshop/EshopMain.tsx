@@ -1,33 +1,26 @@
 import React from 'react'
 import Navbar from './Navbar'
-import { Outlet, type LoaderFunctionArgs } from 'react-router'
-import { prisma } from '~/db.server';
-import { getSession } from '~/session.server';
+import { data, Outlet, type LoaderFunctionArgs } from 'react-router'
+import { findUser } from '~/db.server';
+import { getUserId } from '~/session.server';
 import { Footer } from './Footer';
 
 type Props = {}
 export async function loader({ request }: LoaderFunctionArgs) {
     try {
-        const session = await getSession(request.headers.get('Cookie'));
-        const userId = Number(session.get('userId'))
+        const userId = await getUserId(request);
         if (!userId) {
-            return null
+            return { user: null };
         }
 
-        const user = await prisma.user.findUnique({
-            where: {
-                id: userId
-            }
-        })
-        if (!user) {
-            console.error("user not found !")
-        }
-
-        return { user: user }
+        const data = await findUser(userId);
+        return { user: data.user }; // Note: findUser returns { user: user }
     } catch (e) {
-        console.error("An error occured while loading this page:", e)
+        console.error("Database or server error while loading user:", e);
+        return { user: null };
     }
 }
+
 
 function EshopMain({ }: Props) {
     return (

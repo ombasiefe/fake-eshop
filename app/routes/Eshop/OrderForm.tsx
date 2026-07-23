@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { MdDeleteOutline } from 'react-icons/md';
 import type { Route } from './+types/OrderForm';
 import { Resend } from 'resend';
-import { getSession } from '~/session.server';
+import { getSession, getUserId } from '~/session.server';
 import { redirect } from 'react-router';
 import { HiShoppingCart } from 'react-icons/hi';
 import { Button } from 'flowbite-react';
@@ -21,8 +21,7 @@ type CartItem = {
     quantity: number;
 };
 export async function loader({ request }: Route.LoaderArgs) {
-    const sesion = await getSession(request.headers.get("Cookie"))
-    const userId = sesion.get("userId")
+    const userId = await getUserId(request)
     if (!userId) {
         return redirect('/login');
     }
@@ -56,10 +55,9 @@ export async function action({ request }: Route.ActionArgs) {
             }))
         })
 
-        if (new_order) {
-            //console.log
-            ('New order added successfully !')
-        }
+        // if (new_order) {
+        //     //console.log('New order added successfully !')
+        // }
         const productRows = cart
             .map(
                 (item) => `

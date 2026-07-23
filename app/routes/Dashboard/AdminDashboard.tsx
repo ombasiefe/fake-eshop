@@ -1,5 +1,5 @@
 import React from 'react'
-import { data, Form, type ActionFunctionArgs } from 'react-router'
+import { data } from 'react-router'
 import { AdminSidebar as Sidebar } from './AdminSidebar';
 import { Outlet, redirect } from 'react-router';
 import { getUserId } from '~/session.server';
@@ -20,11 +20,6 @@ export async function loader({ request }: Route.LoaderArgs) {
         throw data('admin check failed');
     }
 }
-export async function action({ request }: ActionFunctionArgs) {
-    const formData = await request.formData();
-}
-
-
 
 export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
     return (

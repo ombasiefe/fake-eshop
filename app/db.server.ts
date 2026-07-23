@@ -2,6 +2,7 @@ import "dotenv/config"
 import { PrismaMariaDb } from "@prisma/adapter-mariadb"
 import { orders_Status, PrismaClient } from "@prisma/client";
 import { data } from "react-router";
+import bcrypt from "bcryptjs";
 
 const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined;
@@ -19,7 +20,26 @@ if (!globalForPrisma.prisma) {
 prisma = globalForPrisma.prisma
 
 
+//---------------Eshop Queries-----------------
 
+export async function getEshopHomeProducts() {
+    const products = await prisma.products.findMany({
+        where: { isActive: true },
+        take: 5
+    });
+    return products
+}
+export async function findUser(userId: number) {
+
+    const user = await prisma.user.findUnique({
+        where: {
+            id: userId
+        }
+    })
+    return { user: user }
+
+
+}
 export async function getUserOrders({ user_id }: { user_id: number }) {
     try {
         const orders = await prisma.orders.findMany({
@@ -78,6 +98,22 @@ export async function ContactFormSubmit({ email, name, surname, tel, contact_rea
 
     }
 }
+export async function getEshopProducts(page: number, pageSize: number) {
+    const products = await prisma.products.findMany({
+        where: { isActive: true },
+        skip: (page - 1) * pageSize,
+        take: pageSize
+    });
+    return { products }
+}
+
+export async function DoesUserExist(email: string) {
+    const user = await prisma.user.findUnique({
+        where: { email },
+    })
+    return user
+}
+
 //----------Dashboard----------------
 //Admin Products 
 export async function getProducts(page: number, pageSize: number, totalPages: number) {
@@ -177,6 +213,12 @@ export async function editProduct(id: number, data: { name: string, description:
         }
     })
 }
+export async function getUniqueProduct(product_id: number) {
+    return await prisma.products.findUnique({
+        where: { id: product_id },
+        include: { category: true }
+    })
+}
 export async function deleteProduct(id: number) {
     await prisma.products.delete({
         where: { id }
@@ -263,9 +305,71 @@ export async function setAdminNotificationRead({ notificationId }: { notificatio
     }
 }
 
-//Admin orders 
+export async function getUniqueNotification(notification_id: number) {
+    const not_details = await prisma.notifications.findUnique({
+        where: { id: notification_id }
+    })
+    return { not_details }
+}
+// ----------------Orders --------------------------------------
 export async function getAdminOrders() {
-
+    const orders = await prisma.orders.findMany({
+        include: {
+            items: {
+                include: { products: true }
+            }
+        },
+        orderBy: { createdAt: 'desc' }
+    })
+    return { data: orders }
 }
 
+export async function addOrders(data: {
+    email: string, tel: string, userId: number, address: string, firstName: string, lastName: string, postalCode: string,
+    items: { productId: number, quantity: number, price: number }[]
+}) {
+    return await prisma.orders.create({
+        data: {
+            email: data.email.trim(),
+            tel: data.tel.trim(),
+            userId: data.userId,
+            address: data.address.trim(),
+            firstName: data.firstName.trim(),
+            lastName: data.lastName.trim(),
+            postalCode: data.postalCode.trim(),
+            items: {
+                create: data.items.map(item => ({
+                    productId: item.productId,
+                    quantity: item.quantity,
+                    price: item.price
+                }))
+            }
+        }
+    })
+}
+
+export async function editOrdersStatus(id: number, data: { status: orders_Status }) {
+    const orderStatus = await prisma.orders.update({
+        where: { id: id },
+        data: { Status: data.status }
+    })
+    return { data: orderStatus }
+}
+
+export async function deleteOrders(id: number) {
+    await prisma.orders.delete({ where: { id } });
+}
+
+
+//-------------Register--------
+export async function addNewUser(new_email: string, new_password: string) {
+    const hashedPassword = await bcrypt.hash(new_password, 10)
+    const new_User = await prisma.user.create({
+        data: {
+            email: new_email,
+            password: hashedPassword
+        }
+    })
+
+}
 export { prisma }

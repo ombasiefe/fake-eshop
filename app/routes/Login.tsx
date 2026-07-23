@@ -1,27 +1,25 @@
 import React from 'react'
 import type { Route } from "./+types/Login"
-import { Form, redirect, useRouteError } from 'react-router'
-import { useActionData } from 'react-router'
-import { prisma } from '~/db.server'
-import bcrypt from 'bcryptjs'
+import { data, Form, redirect, useRouteError } from 'react-router'
+
 type Props = {}
 
-import { getSession, commitSession, } from '~/session.server';
+import { getSession, UserLogin, } from '~/session.server';
 import LoginError from './errors/Eshop_Errors/LoginError'
 
-// export async function loader({ request, }: Route.LoaderArgs) {
-//     const session = await getSession(
-//         request.headers.get("Cookie"),
-//     )
+export async function loader({ request, }: Route.LoaderArgs) {
+    const session = await getSession(
+        request.headers.get("Cookie"),
+    )
 
-//     // If they already have a session, send them to the storefront instead of looping
-//     if (session.has("userId")) {
-//         return redirect("/products");
-//     }
+    // If they already have a session, send them to the storefront instead of looping
+    if (session.has("userId")) {
+        return redirect("/products");
+    }
 
-//     return null;
+    return null;
 
-// }
+}
 
 
 export async function action({ request }: Route.ActionArgs) {
@@ -33,32 +31,9 @@ export async function action({ request }: Route.ActionArgs) {
         return { error: "Email and password are required." };
     }
     try {
-        const Db_user = await prisma.user.findUnique({
-            where: { email },
-        })
-        if (!Db_user) {
-            throw data('User not found', { status: 404 })
 
-        }
-        const result = await bcrypt.compare(password, Db_user.password)
-        if (!result) {
-            return { error: "Invalid credentials" }
+        return await UserLogin(request, password, email)
 
-        } else {
-            const session = await getSession(request.headers.get("Cookie"));
-            session.set("userId", String(Db_user.id))
-            if (Db_user.isAdmin)
-                return redirect("/admin", {
-                    headers: {
-                        "Set-Cookie": await commitSession(session)
-                    }
-                });
-            return redirect('/products', {
-                headers: {
-                    "Set-Cookie": await commitSession(session)
-                }
-            })
-        }
 
     } catch (error) {
         if (error instanceof Response) {

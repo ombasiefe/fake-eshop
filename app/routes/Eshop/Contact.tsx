@@ -13,8 +13,7 @@ export async function action({ request }: Route.ActionArgs) {
     const tel = String(formData.get("tel"))
     const contact_reason = formData.get("contact-reason") as string
     const message = formData.get("message") as string
-    //console.log
-    (email, name, surname, tel, contact_reason, message)
+    //console.log(email, name, surname, tel, contact_reason, message)
     const result = ContactFormSubmit({ email, name, surname, tel, contact_reason, message })
     if ((await result).success) {
         return { success: true }
