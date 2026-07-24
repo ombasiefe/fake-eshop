@@ -1,13 +1,12 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/Orders'
-import { getAdminOrders } from "~/db.server"
+import { deleteOrders, editOrdersStatus, getAdminOrders } from "~/db.server"
 import prismaClientPkg from "@prisma/client"
 
 import { data, Form, useSubmit } from 'react-router'
 import { Button, Card, Select } from 'flowbite-react'
 import { MdCancel, MdDelete } from 'react-icons/md'
 
-import { ManuelOrderStrategy } from '~/services/orders/manual-order'
 import OrderError from '../errors/Eshop_Errors/OrderError'
 
 const { orders_Status } = prismaClientPkg
@@ -41,7 +40,6 @@ export async function action({ request }: Route.ActionArgs) {
     const actionType = formData.get("action") as string;
     const orderId = Number(formData.get("order_id"))
     const new_status = formData.get("status") as string;
-    const service = new ManuelOrderStrategy()
     const statusMap: Record<string, typeof orders_Status[keyof typeof orders_Status]> = {
         pending: orders_Status.pending,
         working_on_it: orders_Status.working_on_it,
@@ -57,7 +55,7 @@ export async function action({ request }: Route.ActionArgs) {
                     return { error: "Invalid status selected." }
                 }
                 //console.log ("orderId", orderId)
-                await service.edit(orderId, { status: selected_Status })
+                await editOrdersStatus(orderId, { status: selected_Status })
             } catch (e) {
                 console.error("Error while updadeing order Status", e)
                 return { error: "Status Could not be changed", }
@@ -65,7 +63,7 @@ export async function action({ request }: Route.ActionArgs) {
             break;
         case "delete_this_order":
             try {
-                await service.delete(orderId)
+                await deleteOrders(orderId)
             } catch (e) {
                 console.error("Error while deleting the order", e)
                 return { error: "Order Could not be deleted", }

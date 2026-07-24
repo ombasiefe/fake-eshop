@@ -1,10 +1,11 @@
 import React from 'react'
 import type { Route } from "./+types/ReplyNotification"
-import { data, Form, Link } from 'react-router'
-import { getUniqueNotification } from '~/db.server'
+import { data, Form, Link, redirect } from 'react-router'
+import { getUniqueNotification, setAdminNotificationRead } from '~/db.server'
 import { Alert, Card, Badge, Label, TextInput, Textarea, Button } from 'flowbite-react'
 import { HiArrowLeft, HiCheckCircle, HiExclamation, HiPaperAirplane } from 'react-icons/hi'
-import { GmailEmailerStrategy } from '~/services/email/gmail-emailer'
+import { sendEmail } from '~/services/mailer.server'
+//import { GmailEmailerStrategy } from '~/services/email/gmail-emailer'
 
 type Props = {}
 export async function loader({ params }: Route.LoaderArgs) {
@@ -26,7 +27,7 @@ export async function loader({ params }: Route.LoaderArgs) {
     return { notification }
 }
 export async function action({ request }: Route.ActionArgs) {
-    const service = new GmailEmailerStrategy;
+    //  const service = new GmailEmailerStrategy;
     const formData = await request.formData();
     const notificationId = Number(formData.get('notificationId'));
     const recipientEmail = formData.get('recipientEmail') as string
@@ -37,7 +38,111 @@ export async function action({ request }: Route.ActionArgs) {
         return null
     }
 
+    const notification = await getUniqueNotification(notificationId);
+    try {
+        await sendEmail("smtp", {
+            to: recipientEmail,
+            subject: `New message from Oura Shop`,
+            text: `Hello ${notification.not_details?.name},
 
+Thank you for contacting Oura Shop.
+
+Regarding your previous message, here is our response:
+
+${replyMessage}
+
+If you have any additional questions, simply reply to this email and we'll be happy to help.
+
+Best regards,
+The Oura Shop Team`,
+            html: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+</head>
+<body style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;background:#f4f7fb;">
+        <tr>
+            <td align="center">
+
+                <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="background:#2563eb;padding:30px;">
+                            <h1 style="margin:0;color:#ffffff;font-size:24px;">
+                                Oura Shop
+                            </h1>
+                            <p style="margin:8px 0 0;color:#dbeafe;font-size:15px;">
+                                Reply to your message
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding:35px;">
+
+                            <p style="font-size:16px;color:#111827;">
+                                Hello <strong>${notification.not_details?.name}</strong>,
+                            </p>
+
+                            <p style="font-size:15px;color:#4b5563;line-height:1.7;">
+                                Thank you for contacting <strong>Oura Shop</strong>.
+                                We appreciate you taking the time to reach out to us.
+                            </p>
+
+                            <p style="font-size:15px;color:#4b5563;line-height:1.7;">
+                                Regarding your inquiry, here is our response:
+                            </p>
+
+                            <div style="
+                                background:#f8fafc;
+                                border-left:4px solid #2563eb;
+                                padding:18px;
+                                margin:25px 0;
+                                color:#111827;
+                                line-height:1.8;
+                                white-space:pre-line;
+                            ">
+                                ${replyMessage}
+                            </div>
+
+                            <p style="font-size:15px;color:#4b5563;line-height:1.7;">
+                                If you need any further assistance, simply reply to this email.
+                                We'll be happy to help.
+                            </p>
+
+                            <p style="margin-top:35px;font-size:15px;color:#111827;">
+                                Best regards,<br>
+                                <strong>Oura Shop Support Team</strong>
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background:#f8fafc;padding:18px;text-align:center;font-size:12px;color:#6b7280;">
+                            © ${new Date().getFullYear()} Oura Shop. All rights reserved.
+                        </td>
+                    </tr>
+
+                </table>
+
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+`
+        })
+        await setAdminNotificationRead({ notificationId })
+        redirect('admin/notifications');
+    } catch (e) {
+        console.error('An error occured while replying to this notification !', e)
+    }
 }
 
 function ReplyNotification({ loaderData }: Route.ComponentProps) {

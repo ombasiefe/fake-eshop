@@ -1,151 +1,103 @@
 import nodemailer from 'nodemailer'
+import { Resend } from 'resend';
+export interface emailMessage {
+    to: string,
+    subject: string,
+    text: string,
+    html: string
+}
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
+interface EmailClient {
+    sendEmail(message: emailMessage): Promise<void>
+}
+type Emailsender = "resend" | "smtp";
+class ResendEmailClient implements EmailClient {
+    private resend: Resend
+    private APIkey: string;
+    private from: string;
+
+    constructor() {
+        const APIkey = process.env.RESEND_API_KEY
+        const from = process.env.RESEND_FROM
+        const resend = new Resend(APIkey)
+
+        if (!APIkey) throw new Error("Resend mailer api key is not set!")
+        if (!from) throw new Error("Resend from address is not set !");
+
+        this.APIkey = APIkey;
+        this.from = from;
+        this.resend = resend
     }
-})
-
-
-interface OrderItem {
-    quantity: number;
-    productTitle: string;
-    productPrice: number;
-    image?: string;
-}
-
-interface OrderConfirmationParams {
-    customerEmail: string;
-    customerName: string;
-    orderId: number;
-    totalAmount: number;
-    items: OrderItem[];
-}
-
-export async function sendOrderConfirmationEmail({
-    customerEmail,
-    customerName,
-    orderId,
-    totalAmount,
-    items
-}: OrderConfirmationParams) {
-
-    // Render individual item rows for the summary table
-    const itemsListHtml = items.map(item => `
-        <tr>
-            <td style="padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
-                <div style="font-size: 14px; font-weight: 600; color: #0f172a;">${item.productTitle}</div>
-                <div style="font-size: 13px; color: #64748b; margin-top: 2px;">Qty: ${item.quantity}</div>
-            </td>
-            <td style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; text-align: right; vertical-align: top; font-size: 14px; font-weight: 600; color: #0f172a;">
-                ${(item.productPrice * item.quantity).toFixed(2)}€
-            </td>
-        </tr>
-    `).join('');
-
-    const mailOptions: nodemailer.SendMailOptions = {
-        from: `"Oura Shop" <${process.env.SMTP_USER}>`,
-        to: customerEmail,
-        subject: `Order Confirmed - #${orderId}`,
-        text: `Hi ${customerName}, thank you for your order #${orderId}! Total: ${totalAmount.toFixed(2)}€`,
-        html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Order Confirmation</title>
-        </head>
-        <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-            
-            <!-- Main Wrapper -->
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 40px 10px;">
-                <tr>
-                    <td align="center">
-                        
-                        <!-- Container Card -->
-                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-                            
-                            <!-- Header / Banner -->
-                            <tr>
-                                <td style="background-color: #2563eb; padding: 32px 32px 28px 32px; text-align: left;">
-                                    <div style="font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; margin-bottom: 12px;">
-                                        OURA SHOP
-                                    </div>
-                                    <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #ffffff; line-height: 1.3;">
-                                        Thank you for your order!
-                                    </h1>
-                                    <p style="margin: 8px 0 0 0; font-size: 15px; color: #bfdbfe;">
-                                        Hi ${customerName}, we've received order <strong style="color: #ffffff;">#${orderId}</strong> and are getting it ready.
-                                    </p>
-                                </td>
-                            </tr>
-
-                            <!-- Content Area -->
-                            <tr>
-                                <td style="padding: 32px;">
-                                    
-                                    <!-- Order Summary Header -->
-                                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 12px;">
-                                        Order Summary
-                                    </div>
-
-                                    <!-- Items Table -->
-                                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
-                                        ${itemsListHtml}
-                                    </table>
-
-                                    <!-- Totals Box -->
-                                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border-radius: 8px; padding: 16px;">
-                                        <tr>
-                                            <td style="font-size: 15px; font-weight: 700; color: #0f172a;">
-                                                Total Paid
-                                            </td>
-                                            <td style="font-size: 18px; font-weight: 800; color: #2563eb; text-align: right;">
-                                                ${totalAmount.toFixed(2)}€
-                                            </td>
-                                        </tr>
-                                    </table>
-
-                                    <!-- Divider -->
-                                    <div style="border-top: 1px solid #e2e8f0; margin: 28px 0 20px 0;"></div>
-
-                                    <!-- Footer / Support Note -->
-                                    <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5; text-align: center;">
-                                        Have questions about your purchase? Simply reply directly to this email and our team will be happy to help.
-                                    </p>
-
-                                </td>
-                            </tr>
-
-                            <!-- Sub-Footer -->
-                            <tr>
-                                <td style="background-color: #f1f5f9; padding: 16px 32px; text-align: center; font-size: 12px; color: #94a3b8;">
-                                    © ${new Date().getFullYear()} Oura Shop. All rights reserved.
-                                </td>
-                            </tr>
-
-                        </table>
-
-                    </td>
-                </tr>
-            </table>
-
-        </body>
-        </html>
-        `,
-    };
-
-    try {
-        const info = await transporter.sendMail(mailOptions);
-        //console.log(`Order Confirmation Email sent ${info.messageId}`)
-        return { success: true }
-    } catch (error) {
-        console.error("Failed to send email", error)
-        return { success: false, error }
+    async sendEmail(message: emailMessage): Promise<void> {
+        // console.log("senEmail Called")
+        const result = await this.resend.emails.send({
+            from: this.from,
+            to: message.to,
+            subject: message.subject,
+            text: message.text,
+            html: message.html
+        })
+        if (result.error) {
+            throw new Error(`Resend emailer failed ${result.error.message} `)
+        }
     }
 }
+
+export function getEmailClient(sender: Emailsender): EmailClient {
+
+    if (sender === "resend") {
+        return new ResendEmailClient();
+    }
+
+    return new GmailEmailClient();
+}
+
+export async function sendEmail(sender: Emailsender, message: emailMessage): Promise<void> {
+    const client = getEmailClient(sender);
+    await client.sendEmail(message);
+}
+
+class GmailEmailClient implements EmailClient {
+    private host: string;
+    private port: number;
+    private user?: string;
+    private password?: string;
+
+    constructor() {
+        const host = process.env.SMTP_HOST;
+        const port = Number(process.env.SMTP_PORT);
+        const from = process.env.SMTP_USER;
+        const password = process.env.SMTP_PASS;
+
+        if (!host) throw new Error('SMTP_HOST is not set!');
+        if (!port) throw new Error('SMTP_PORT is not set!');
+        if (!from) throw new Error('SMTP_USER is not set!');
+        if (!password) throw new Error('SMTP_USER is not set!');
+        this.host = host;
+        this.port = port;
+        this.user = from;
+        this.password = password;
+    }
+    async sendEmail(message: emailMessage): Promise<void> {
+        const transporter = nodemailer.createTransport({
+            host: this.host,
+            port: this.port,
+            secure: false,
+            auth: {
+                user: this.user,
+                pass: this.password
+            }
+        })
+        await transporter.sendMail({
+            from: `Oura-Shop ${this.user}`,
+            to: message.to,
+            subject: message.subject,
+            text: message.text,
+            html: message.html
+        })
+    }
+}
+
+
+
+

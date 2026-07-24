@@ -3,14 +3,12 @@ import { Form } from 'react-router'
 import { useEffect, useState } from 'react';
 import { MdDeleteOutline } from 'react-icons/md';
 import type { Route } from './+types/OrderForm';
-import { Resend } from 'resend';
 import { getSession, getUserId } from '~/session.server';
 import { redirect } from 'react-router';
 import { HiShoppingCart } from 'react-icons/hi';
 import { Button } from 'flowbite-react';
-import { ManuelOrderStrategy } from '~/services/orders/manual-order';
-import { ResendEmailerStrategy } from '~/services/email/resend-emailer';
-import { GmailEmailerStrategy } from '~/services/email/gmail-emailer';
+import { sendEmail } from '~/services/mailer.server';
+import { addOrders } from '~/db.server';
 export
     type Props = {}
 type CartItem = {
@@ -29,6 +27,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export async function action({ request }: Route.ActionArgs) {
+
     const formData = await request.formData();
     const email = formData.get('email') as string;
     const first_name = formData.get('first_name') as string;
@@ -42,25 +41,24 @@ export async function action({ request }: Route.ActionArgs) {
     ////console.log(email, first_name, last_name, phone, total_price)
     const session = await getSession(request.headers.get('Cookie'));
     const userId = Number(session.get('userId'))
-    const service = new ManuelOrderStrategy()
-    const resend_email_service = new ResendEmailerStrategy
-    const gmail_service = new GmailEmailerStrategy
-    try {
-        const new_order = await service.add({
-            email: email, tel: phone, userId: userId, address: address, firstName: first_name, lastName: last_name, postalCode: postal_code,
-            items: cart.map(item => ({
-                productId: item.productId,
-                quantity: item.quantity,
-                price: item.productPrice
-            }))
-        })
 
-        // if (new_order) {
-        //     //console.log('New order added successfully !')
-        // }
-        const productRows = cart
-            .map(
-                (item) => `
+    let new_order: any;
+
+    new_order = await addOrders({
+        email: email, tel: phone, userId: userId, address: address, firstName: first_name, lastName: last_name, postalCode: postal_code,
+        items: cart.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.productPrice
+        }))
+
+    })
+
+    //console.log(new_order)
+
+    const productRows = cart
+        .map(
+            (item) => `
       <tr>
         <td>${item.productTitle}</td>
         <td style="text-align:center;">${item.quantity}</td>
@@ -68,26 +66,256 @@ export async function action({ request }: Route.ActionArgs) {
         <td style="text-align:right;">€${(item.productPrice * item.quantity).toFixed(2)}</td>
       </tr>
     `
-            )
-            .join("");
-        resend_email_service.send({
-            first_name, last_name, email, phone, address,
-            postal_code,
-            total_price: Number(total_price),
-            productRows: productRows as any
-        })
+        )
+        .join("");
+    try {
 
-        gmail_service.send({
-            customerEmail: email,
-            customerName: first_name,
-            orderId: (new_order as any)?.id ?? (new_order as any)?.orderId,
-            totalAmount: Number(total_price),
-            ProductRows: cart
+        // console.log(new_order)
+        await sendEmail("resend", {
+            to: String(process.env.RESEND_TO),
+            subject: `🛒 New Order from ${first_name} ${last_name}`,
+            text: 'A new order Received',
+            html: `
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{
+    font-family:Arial,sans-serif;
+    background:#f4f4f4;
+    padding:30px;
+}
+
+.container{
+    max-width:700px;
+    margin:auto;
+    background:#fff;
+    border-radius:10px;
+    padding:30px;
+    box-shadow:0 3px 10px rgba(0,0,0,.1);
+}
+
+h1{
+    color:#2563eb;
+    margin-bottom:25px;
+}
+
+.section{
+    margin-bottom:25px;
+}
+
+.info-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.info-table td{
+    padding:8px;
+    border-bottom:1px solid #eee;
+}
+
+.products{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+}
+
+.products th{
+    background:#2563eb;
+    color:white;
+    padding:10px;
+}
+
+.products td{
+    padding:10px;
+    border-bottom:1px solid #ddd;
+}
+
+.total{
+    margin-top:25px;
+    text-align:right;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.footer{
+    margin-top:30px;
+    color:#777;
+    font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🛒 New Order Received</h1>
+
+<div class="section">
+
+<h2>Customer Details</h2>
+
+<table class="info-table">
+<tr>
+<td><strong>Name</strong></td>
+<td>${first_name} ${last_name}</td>
+</tr>
+
+<tr>
+<td><strong>Email</strong></td>
+<td>${email}</td>
+</tr>
+
+<tr>
+<td><strong>Phone</strong></td>
+<td>${phone}</td>
+</tr>
+
+<tr>
+<td><strong>Address</strong></td>
+<td>${address}</td>
+</tr>
+
+<tr>
+<td><strong>Postal Code</strong></td>
+<td>${postal_code}</td>
+</tr>
+
+</table>
+
+</div>
+
+<h2>Ordered Products</h2>
+
+<table class="products">
+
+<thead>
+<tr>
+<th>Product</th>
+<th>Qty</th>
+<th>Price</th>
+<th>Subtotal</th>
+</tr>
+</thead>
+
+<tbody>
+${productRows}
+</tbody>
+
+</table>
+
+<div class="total">
+Total: €${Number(total_price).toFixed(2)}
+</div>
+
+<div class="footer">
+Order generated from your webshop.
+</div>
+
+</div>
+
+</body>
+</html>
+`,
+        })
+    } catch (e) {
+        console.error('An error occured while sending the order info email to admin !', e);
+    }
+    try {
+        await sendEmail("smtp", {
+            to: email,
+            subject: `Order Confirmed - #${new_order.id}`,
+            text: `Hi ${first_name}, thank you for your order #${new_order.id}! Total: ${Number(total_price).toFixed(2)}€`,
+            html: `<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Order Confirmation</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+            
+            <!-- Main Wrapper -->
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 40px 10px;">
+                <tr>
+                    <td align="center">
+                        
+                        <!-- Container Card -->
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                            
+                            <!-- Header / Banner -->
+                            <tr>
+                                <td style="background-color: #2563eb; padding: 32px 32px 28px 32px; text-align: left;">
+                                    <div style="font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; margin-bottom: 12px;">
+                                        OURA SHOP
+                                    </div>
+                                    <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #ffffff; line-height: 1.3;">
+                                        Thank you for your order!
+                                    </h1>
+                                    <p style="margin: 8px 0 0 0; font-size: 15px; color: #bfdbfe;">
+                                        Hi ${first_name}, we've received order <strong style="color: #ffffff;">#${new_order.id}</strong> and are getting it ready.
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <!-- Content Area -->
+                            <tr>
+                                <td style="padding: 32px;">
+                                    
+                                    <!-- Order Summary Header -->
+                                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 12px;">
+                                        Order Summary
+                                    </div>
+
+                                    <!-- Items Table -->
+                                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
+                                        ${productRows}
+                                    </table>
+
+                                    <!-- Totals Box -->
+                                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border-radius: 8px; padding: 16px;">
+                                        <tr>
+                                            <td style="font-size: 15px; font-weight: 700; color: #0f172a;">
+                                                Total Paid
+                                            </td>
+                                            <td style="font-size: 18px; font-weight: 800; color: #2563eb; text-align: right;">
+                                                ${Number(total_price).toFixed(2)}€
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <!-- Divider -->
+                                    <div style="border-top: 1px solid #e2e8f0; margin: 28px 0 20px 0;"></div>
+
+                                    <!-- Footer / Support Note -->
+                                    <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5; text-align: center;">
+                                        Have questions about your purchase? Simply reply directly to this email and our team will be happy to help.
+                                    </p>
+
+                                </td>
+                            </tr>
+
+                            <!-- Sub-Footer -->
+                            <tr>
+                                <td style="background-color: #f1f5f9; padding: 16px 32px; text-align: center; font-size: 12px; color: #94a3b8;">
+                                    © ${new Date().getFullYear()} Oura Shop. All rights reserved.
+                                </td>
+                            </tr>
+
+                        </table>
+
+                    </td>
+                </tr>
+            </table>
+
+        </body>
+        </html>
+ `,
         })
 
         return redirect("/products?success=true")
     } catch (eror) {
-
         console.error("Error while sending the email:", eror)
     }
 }

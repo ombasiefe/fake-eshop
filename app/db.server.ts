@@ -289,9 +289,9 @@ export async function getNotifications() {
         console.error("An error occured while fetching the notifications from db", e)
         return { data: null }
     }
-
-
 }
+
+
 export async function setAdminNotificationRead({ notificationId }: { notificationId: number }) {
     try {
         await prisma.notifications.update({
@@ -328,24 +328,29 @@ export async function addOrders(data: {
     email: string, tel: string, userId: number, address: string, firstName: string, lastName: string, postalCode: string,
     items: { productId: number, quantity: number, price: number }[]
 }) {
-    return await prisma.orders.create({
-        data: {
-            email: data.email.trim(),
-            tel: data.tel.trim(),
-            userId: data.userId,
-            address: data.address.trim(),
-            firstName: data.firstName.trim(),
-            lastName: data.lastName.trim(),
-            postalCode: data.postalCode.trim(),
-            items: {
-                create: data.items.map(item => ({
-                    productId: item.productId,
-                    quantity: item.quantity,
-                    price: item.price
-                }))
+    try {
+        return await prisma.orders.create({
+            data: {
+                email: data.email.trim(),
+                tel: data.tel.trim(),
+                userId: data.userId,
+                address: data.address.trim(),
+                firstName: data.firstName.trim(),
+                lastName: data.lastName.trim(),
+                postalCode: data.postalCode.trim(),
+                items: {
+                    create: data.items.map(item => ({
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        price: item.price
+                    }))
+                }
             }
-        }
-    })
+        })
+    } catch (e) {
+        console.error('Error while adding new order !', e)
+        return null
+    }
 }
 
 export async function editOrdersStatus(id: number, data: { status: orders_Status }) {

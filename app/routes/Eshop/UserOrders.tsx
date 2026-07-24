@@ -1,12 +1,11 @@
 import React from 'react'
 import { getUserId } from '~/session.server'
 import type { Route } from './+types/UserOrders'
-import { getUserOrders, prisma } from '~/db.server';
+import { editOrdersStatus, getUserOrders, prisma } from '~/db.server';
 import { Button, Card, Badge } from 'flowbite-react';
 import { data, Form, useNavigation, useRouteError } from 'react-router';
 import { MdCancel, MdLocalPhone, MdOutlineEmail, MdOutlineLocationOn } from 'react-icons/md';
 import prismaClientPkg from "@prisma/client"
-import { ManuelOrderStrategy } from '~/services/orders/manual-order';
 import OrderError from '../errors/Eshop_Errors/OrderError';
 
 const { orders_Status } = prismaClientPkg
@@ -36,7 +35,7 @@ export async function action({ request }: Route.ActionArgs) {
     const formData = await request.formData();
     const actionType = formData.get("action");
     const order_id = Number(formData.get("orderId"));
-    const service = new ManuelOrderStrategy();
+
     switch (actionType) {
         case "cancel_order":
             const currentStatus = await prisma.orders.findUnique({
@@ -44,7 +43,7 @@ export async function action({ request }: Route.ActionArgs) {
             })
             if (currentStatus?.Status == "pending") {
                 try {
-                    const updated_user = await service.edit(order_id, { status: orders_Status.canceled })
+                    const updated_user = await editOrdersStatus(order_id, { status: orders_Status.canceled })
                     console.log("updated user=", updated_user)
                     if (updated_user.data.Status === "canceled") {
                         //console.log("order cancelled successfully !")
