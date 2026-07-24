@@ -62,14 +62,16 @@ function Notifications({ loaderData }: Route.ComponentProps) {
                             <fetcher.Form method='post'>
 
                                 <input type="hidden" name='actionType' value="mark_as_read" />
-                                <button type='submit' name="not_Id" value={not.id}>
+                                <button type='submit' name="not_Id" value={not.id}
+                                    className='flex bg-green-500 p-2 rounded-2xl'>
                                     <MdMarkEmailRead className='text-2xl mx-1' />
                                     Mark as read
                                 </button>
                             </fetcher.Form>
                             <fetcher.Form method='post'>
                                 <input type="hidden" name='actionType' value="reply_to_this" />
-                                <button type='submit' name="not_Id" value={not.id}>
+                                <button type='submit' name="not_Id" value={not.id}
+                                    className='flex bg-blue-600 p-2 rounded-2xl'>
                                     <LuMessageSquareReply className='text-2xl mx-1' />
                                     Reply..
                                 </button>
