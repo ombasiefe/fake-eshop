@@ -1,8 +1,8 @@
 import React from 'react'
 import { Form, redirect } from 'react-router'
 import type { Route } from "./+types/Register"
-import { DoesUserExist } from '~/db.server'
-import { UserRegister } from '~/session.server';
+import { DoesUserExist } from '~/lib/db.server'
+import { UserRegister } from '~/lib/session.server';
 type Props = {}
 
 export async function action({ request }: Route.ActionArgs) {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/Orders'
-import { deleteOrders, editOrdersStatus, getAdminOrders } from "~/db.server"
+import { deleteOrders, editOrdersStatus, getAdminOrders } from "~/lib/db.server"
 import prismaClientPkg from "@prisma/client"
 
 import { data, Form, useSubmit } from 'react-router'

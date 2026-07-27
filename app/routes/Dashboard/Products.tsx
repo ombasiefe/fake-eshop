@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import type { Route } from './+types/Products';
 
 import { data, Form, Link, redirect, useFetcher, useRouteError, } from 'react-router'
-import { addProducts_from_api, getProducts, prisma } from "~/db.server";
-import { ManuelProductStrategy } from '~/services/products/manual-product';
+import { addProducts_from_api, getProducts, prisma } from "~/lib/db.server";
+import { ManuelProductStrategy } from '~/lib/products/manual-product';
 import ProductError from '../errors/Dashboard_Errors/ProductError';
 
 type Props = {}

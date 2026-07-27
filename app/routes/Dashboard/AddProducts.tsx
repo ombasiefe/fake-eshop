@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/AddProducts';
 import { Form, redirect } from 'react-router'
-import { prisma } from '~/db.server'
+import { prisma } from '~/lib/db.server'
 import { HiOutlineSave } from 'react-icons/hi';
 import path from 'path';
 import fs from "fs/promises"
-import { ManuelProductStrategy } from '~/services/products/manual-product';
+import { ManuelProductStrategy } from '~/lib/products/manual-product';
 type Props = {}
 
 export async function loader({ request }: Route.LoaderArgs) {

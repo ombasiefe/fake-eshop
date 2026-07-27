@@ -2,9 +2,9 @@ import React from 'react'
 import { data } from 'react-router'
 import { AdminSidebar as Sidebar } from './AdminSidebar';
 import { Outlet, redirect } from 'react-router';
-import { getUserId } from '~/session.server';
+import { getUserId } from '~/lib/session.server';
 import type { Route } from './+types/AdminDashboard'
-import { isAdminCheck } from "~/db.server"
+import { isAdminCheck } from "~/lib/db.server"
 import DashboardError from '../errors/Dashboard_Errors/DashboardError';
 type Props = {}
 

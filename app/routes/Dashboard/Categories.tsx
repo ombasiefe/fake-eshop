@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/Categories'
-import { getCategories } from '~/db.server'
+import { getCategories } from '~/lib/db.server'
 import { data, useFetcher, useRouteError } from 'react-router'
 import { Form } from 'react-router'
 import { IoMdCloseCircle } from "react-icons/io";
 
 
 type Props = {}
-import { ManuelCategoryStrategy } from '~/services/categories/manual-category'
+import { ManuelCategoryStrategy } from '~/lib/categories/manual-category'
 import { Button, Card } from 'flowbite-react'
 import CategoryError from '../errors/Dashboard_Errors/CategoryError'
 export async function loader({ request }: Route.LoaderArgs) {

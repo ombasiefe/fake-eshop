@@ -3,7 +3,7 @@ import type { Route } from './+types/EshopHome';
 
 import React from 'react'
 import { data, redirect } from 'react-router'
-import { getEshopHomeProducts } from "~/db.server"
+import { getEshopHomeProducts } from "~/lib/db.server"
 
 import { Button, Card, Carousel } from 'flowbite-react';
 

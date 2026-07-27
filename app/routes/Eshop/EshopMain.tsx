@@ -1,8 +1,8 @@
 import React from 'react'
 import Navbar from './Navbar'
 import { data, Outlet, type LoaderFunctionArgs } from 'react-router'
-import { findUser } from '~/db.server';
-import { getUserId } from '~/session.server';
+import { findUser } from '~/lib/db.server';
+import { getUserId } from '~/lib/session.server';
 import { Footer } from './Footer';
 
 type Props = {}

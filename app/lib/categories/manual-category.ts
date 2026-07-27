@@ -1,5 +1,5 @@
 import type { CategoriesStrategy } from "./categories.service";
-import { addCategory, deleteCategory, editCategory, prisma } from "~/db.server"
+import { addCategory, deleteCategory, editCategory, prisma } from "~/lib/db.server"
 
 export class ManuelCategoryStrategy implements CategoriesStrategy {
     async add(data: { name: string }) {

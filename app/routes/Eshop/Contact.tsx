@@ -2,7 +2,7 @@ import { Button, Card, Checkbox, Label, Select, Textarea, TextInput } from 'flow
 import React, { useEffect } from 'react'
 import { Form, Link, redirect } from 'react-router'
 import type { Route } from './+types/Contact'
-import { ContactFormSubmit } from "~/db.server"
+import { ContactFormSubmit } from "~/lib/db.server"
 
 type Props = {}
 export async function action({ request }: Route.ActionArgs) {

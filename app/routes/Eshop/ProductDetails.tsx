@@ -1,6 +1,6 @@
 import React from 'react'
 import type { Route } from './+types/ProductDetails'
-import { prisma } from '~/db.server'
+import { prisma } from '~/lib/db.server'
 import { FaShoppingBasket } from 'react-icons/fa'
 import ProductError from '../errors/Eshop_Errors/ProductError'
 import { data, useRouteError } from 'react-router'

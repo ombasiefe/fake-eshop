@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { Popover, Button, Avatar } from 'flowbite-react'
 import { redirect, useLoaderData, type LoaderFunctionArgs } from 'react-router'
-import { getUserId } from '~/session.server'
-import { findUser, prisma } from "~/db.server"
+import { getUserId } from '~/lib/session.server'
+import { findUser, prisma } from "~/lib/db.server"
 import { Drawer, DrawerHeader, DrawerItems } from 'flowbite-react'
 type Props = {}
 export async function loader({ request }: LoaderFunctionArgs) {

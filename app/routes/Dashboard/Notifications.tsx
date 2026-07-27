@@ -1,7 +1,7 @@
 import { Button, Card } from 'flowbite-react'
 import React, { useEffect } from 'react'
 import type { Route } from "./+types/Notifications"
-import { getNotifications, setAdminNotificationRead } from '~/db.server';
+import { getNotifications, setAdminNotificationRead } from '~/lib/db.server';
 import { Form, redirect, useFetcher } from 'react-router';
 import { MdMarkEmailRead } from 'react-icons/md';
 import { LuMessageSquareReply } from "react-icons/lu";

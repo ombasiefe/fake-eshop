@@ -2,7 +2,7 @@ import { error } from 'console'
 import React, { useEffect, useState } from 'react'
 import type { Route } from './+types/Products'
 import { data, isRouteErrorResponse, redirect, useRouteError, useSearchParams } from 'react-router'
-import { getEshopProducts, prisma } from "~/db.server"
+import { getEshopProducts, prisma } from "~/lib/db.server"
 import { Form } from 'react-router'
 import { FaShoppingBasket } from 'react-icons/fa'
 import { BsArrowDownRightCircle } from 'react-icons/bs'

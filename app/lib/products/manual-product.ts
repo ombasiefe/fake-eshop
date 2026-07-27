@@ -1,5 +1,5 @@
 import type { ProductsStrategy } from "./products.service";
-import { addProduct_manually, deleteProduct, editProduct, prisma } from "~/db.server"
+import { addProduct_manually, deleteProduct, editProduct, prisma } from "~/lib/db.server"
 
 
 export class ManuelProductStrategy implements ProductsStrategy {

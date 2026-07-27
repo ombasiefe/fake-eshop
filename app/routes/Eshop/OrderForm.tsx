@@ -3,12 +3,12 @@ import { Form } from 'react-router'
 import { useEffect, useState } from 'react';
 import { MdDeleteOutline } from 'react-icons/md';
 import type { Route } from './+types/OrderForm';
-import { getSession, getUserId } from '~/session.server';
+import { getSession, getUserId } from '~/lib/session.server';
 import { redirect } from 'react-router';
 import { HiShoppingCart } from 'react-icons/hi';
 import { Button } from 'flowbite-react';
-import { sendEmail } from '~/services/mailer.server';
-import { addOrders } from '~/db.server';
+import { sendEmail } from '~/lib/mailer.server';
+import { addOrders } from '~/lib/db.server';
 export
     type Props = {}
 type CartItem = {

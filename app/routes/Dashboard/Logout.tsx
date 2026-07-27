@@ -2,7 +2,7 @@ import React from 'react'
 import type { Route } from './+types/Logout'
 import {
     adminLogout,
-} from "../../session.server"
+} from "../../lib/session.server"
 import { Form, redirect, Link, data } from 'react-router'
 type Props = {}
 export async function action({

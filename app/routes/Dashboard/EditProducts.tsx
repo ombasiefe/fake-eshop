@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/EditProducts';
 import { data, Form, redirect, useLoaderData, useRouteError } from 'react-router'
-import { getCategories, getUniqueProduct, prisma } from '~/db.server'
+import { getCategories, getUniqueProduct, prisma } from '~/lib/db.server'
 import { HiOutlineSave } from 'react-icons/hi';
 import path from 'path';
 import fs from "fs/promises"
-import { ManuelProductStrategy } from '~/services/products/manual-product';
+import { ManuelProductStrategy } from '~/lib/products/manual-product';
 import ProductError from '../errors/Dashboard_Errors/ProductError';
 
 type Props = {}

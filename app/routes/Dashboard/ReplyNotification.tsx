@@ -1,10 +1,10 @@
 import React from 'react'
 import type { Route } from "./+types/ReplyNotification"
 import { data, Form, Link, redirect } from 'react-router'
-import { getUniqueNotification, setAdminNotificationRead } from '~/db.server'
+import { getUniqueNotification, setAdminNotificationRead } from '~/lib/db.server'
 import { Alert, Card, Badge, Label, TextInput, Textarea, Button } from 'flowbite-react'
 import { HiArrowLeft, HiCheckCircle, HiExclamation, HiPaperAirplane } from 'react-icons/hi'
-import { sendEmail } from '~/services/mailer.server'
+import { sendEmail } from '~/lib/mailer.server'
 //import { GmailEmailerStrategy } from '~/services/email/gmail-emailer'
 
 type Props = {}

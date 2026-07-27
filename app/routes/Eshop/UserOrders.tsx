@@ -1,7 +1,7 @@
 import React from 'react'
-import { getUserId } from '~/session.server'
+import { getUserId } from '~/lib/session.server'
 import type { Route } from './+types/UserOrders'
-import { editOrdersStatus, getUserOrders, prisma } from '~/db.server';
+import { editOrdersStatus, getUserOrders, prisma } from '~/lib/db.server';
 import { Button, Card, Badge } from 'flowbite-react';
 import { data, Form, useNavigation, useRouteError } from 'react-router';
 import { MdCancel, MdLocalPhone, MdOutlineEmail, MdOutlineLocationOn } from 'react-icons/md';
