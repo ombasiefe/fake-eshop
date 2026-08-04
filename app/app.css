@@ -1,4 +1,10 @@
 @import "tailwindcss";
+@import "flowbite-react/plugin/tailwindcss";
+@source "../.flowbite-react/class-list.json";
+
+/* Force Tailwind v4 to scan the node_modules directory at the project root */
+@source "./node_modules/flowbite-react/dist/esm/**/*.mjs";
+@source "node_modules/flowbite-react/dist/esm/**/*.mjs";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,

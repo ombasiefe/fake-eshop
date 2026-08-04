@@ -1,36 +1,36 @@
 import React from 'react'
-import { Form, type ActionFunctionArgs } from 'react-router'
-import Sidebar from './Sidebar';
+import { data } from 'react-router'
+import { AdminSidebar as Sidebar } from './AdminSidebar';
 import { Outlet, redirect } from 'react-router';
-import { getSession } from '~/session.server';
+import { getUserId } from '~/lib/session.server';
 import type { Route } from './+types/AdminDashboard'
+import { isAdminCheck } from "~/lib/db.server"
+import DashboardError from '../errors/Dashboard_Errors/DashboardError';
 type Props = {}
 
 export async function loader({ request }: Route.LoaderArgs) {
-    const sesion = await getSession(request.headers.get("Cookie"))
-    const userId = sesion.get("userId")
-    if (!userId) {
-        return redirect('/login');
+    const userId = await getUserId(request);
+    if (!userId) return redirect('/login');
+
+    try {
+        const admin = isAdminCheck(userId)
+        if (!admin) return redirect('/login');
+        return { admin };
+    } catch (e) {
+        throw data('admin check failed');
     }
-
-}
-export async function action({ request }: ActionFunctionArgs) {
-    const formData = await request.formData();
-    const actionType = formData.get("action")
 }
 
-
-
-function AdminDashboard({ loaderData }: Route.ComponentProps) {
+export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
     return (
         <div className="flex h-screen w-screen overflow-hidden">
 
-            <aside className="w-64 border-r shrink-0">
+            <aside className=" border-r shrink-0 bg-[#1D2A45]">
                 <Sidebar />
             </aside>
 
             <main className="flex-1 h-full overflow-y-auto p-8  bg-[#1d2a45]">
-                <div className="max-w-6xl mx-auto">
+                <div className="max-w-9xl mx-auto">
                     <Outlet />
                 </div>
             </main>
@@ -39,4 +39,6 @@ function AdminDashboard({ loaderData }: Route.ComponentProps) {
     )
 }
 
-export default AdminDashboard
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+    return <DashboardError error={error} />
+}

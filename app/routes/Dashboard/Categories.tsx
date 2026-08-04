@@ -1,50 +1,57 @@
 import React, { useState } from 'react'
 import type { Route } from './+types/Categories'
-import { prisma } from '~/db.server'
-import { useFetcher } from 'react-router'
+import { getCategories } from '~/lib/db.server'
+import { data, useFetcher, useRouteError } from 'react-router'
 import { Form } from 'react-router'
-type Props = {}
+import { IoMdCloseCircle } from "react-icons/io";
 
+
+type Props = {}
+import { ManuelCategoryStrategy } from '~/lib/categories/manual-category'
+import { Button, Card } from 'flowbite-react'
+import CategoryError from '../errors/Dashboard_Errors/CategoryError'
 export async function loader({ request }: Route.LoaderArgs) {
     try {
-        const Db_categories = await prisma.categories.findMany()
-        return { categories: Db_categories }
+        const Db_categories = await getCategories()
+        return { categories: Db_categories.data }
     } catch (e) {
-        console.error(e)
-        return { categories: [] }
+        // console.error(e)
+        // return { categories: [] }
+        throw data('No categories')
     }
 }
 
 export async function action({ request }: Route.ActionArgs) {
     const formData = await request.formData()
     const actionType = formData.get("action") as string
-    console.log("actionType:", actionType)
+    //console.log("actionType:", actionType)
+    const service = new ManuelCategoryStrategy();
     switch (actionType) {
         case "add_new_category":
             const new_categoryName = formData.get("new_category_name") as string;
-            console.log("new Category name:", new_categoryName)
-            if (!new_categoryName) {
-                console.error("There is no new category name");
-            }
-            try {
-                const result = await prisma.categories.create({
-                    data: { name: new_categoryName }
-                })
-                console.log("New category inserted successfully !")
 
-            } catch (e) {
-                console.error("Could not find any category to insert")
-            }
+            service.add({ name: new_categoryName });
+            break;
+        case "delete_this_category":
+            const catId = Number(formData.get('cat_Id'))
+            service.delete(catId);
+            break;
+        case "edit_this_category":
+            const CatId = Number(formData.get("cat_Id"))
+            const updatedName = formData.get('updated_category_name') as string
+            service.edit(CatId, { name: updatedName })
     }
 }
-function Categories({ loaderData }: Route.ComponentProps) {
+export default function Categories({ loaderData }: Route.ComponentProps) {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null)
 
     const { categories } = loaderData;
     const fetcher = useFetcher();
-    const [categoryAdderOpen, setCategoryAdderOpen] = useState(false)
 
+    const [categoryAdderOpen, setCategoryAdderOpen] = useState(false)
+    const [categoryUpdaterOpen, setCategoryUpdaterOpen] = useState(false);
+    const [categoryNameToUpdate, setcategoryNameToUpdate] = useState("")
     return (
         <section className="container px-4 mx-auto">
             {confirmOpen && (
@@ -65,8 +72,8 @@ function Categories({ loaderData }: Route.ComponentProps) {
                                     if (!selectedId) return
                                     fetcher.submit(
                                         {
-                                            action: "delete_this_product",
-                                            prod_Id: selectedId
+                                            action: "delete_this_category",
+                                            cat_Id: selectedId
                                         },
                                         { method: "post" })
                                     setConfirmOpen(false);
@@ -84,29 +91,74 @@ function Categories({ loaderData }: Route.ComponentProps) {
                     <div className='bg-gray-300 p-6 rounded-lg w-[300px]'>
 
                         <fetcher.Form method='post'>
-                            <div className='text-black'>
-                                <h2>Add new Category</h2>
+                            <Card className='text-white justify-center items-center'>
+                                <div className='flex justify-between'>
+                                    <h2 className='text-xl'>Add new Category</h2>
+                                    <button
+                                        onClick={() => setCategoryAdderOpen(false)}>
+                                        <IoMdCloseCircle className='text-3xl text-red-600 cursor-pointer' />
+                                    </button>
+                                </div>
                                 <label htmlFor=""> Category name:
                                     <input type="hidden" name='action' value="add_new_category" />
                                     <input type="text" className='border rounded-md' name='new_category_name' />
                                 </label>
                                 <div className='flex justify-center gap-10 mt-1'>
-                                    <button onClick={() => setCategoryAdderOpen(false)}
-                                        className='p-1 rounded-md bg-red-600 text-white hover:cursor-pointer'>
+                                    <Button onClick={() => setCategoryAdderOpen(false)}
+                                        className='p-1 rounded-md bg-red-600 text-white hover:cursor-pointer'
+                                        color='red'>
                                         Cancel
-                                    </button>
-                                    <button
+                                    </Button>
+                                    <Button
                                         type='submit'
                                         className='p-1 rounded-md bg-blue-600 text-white hover:cursor-pointer'>
                                         Add
-                                    </button>
+                                    </Button>
                                 </div>
-                            </div>
+                            </Card>
                         </fetcher.Form>
                     </div>
                 </div>
 
             )}
+            {categoryUpdaterOpen && (
+                <div className="fixed inset-0 bg-transparent backdrop-blur-md flex items-center justify-center">
+                    <div className='bg-gray-300 p-6 rounded-lg w-[300px]'>
+
+                        <fetcher.Form method='post'>
+                            <Card className='text-white justify-center items-center'>
+                                <div className='flex justify-between'>
+                                    <h2 className='text-xl'>Update Category</h2>
+                                    <button
+                                        onClick={() => setCategoryUpdaterOpen(false)}>
+                                        <IoMdCloseCircle className='text-3xl text-red-600 cursor-pointer' />
+                                    </button>
+                                </div>
+                                <label htmlFor=""> Category name:
+                                    <input type="hidden" name='action' value="edit_this_category" />
+                                    <input type="hidden" name='cat_Id' value={selectedId || -0} />
+                                    <input type="text" className='border rounded-md' name='updated_category_name' defaultValue={categoryNameToUpdate} />
+                                </label>
+                                <div className='flex justify-center gap-10 mt-1'>
+                                    <Button onClick={() => setCategoryUpdaterOpen(false)}
+                                        className='p-1 rounded-md bg-red-600 text-white hover:cursor-pointer'
+                                        color='red'>
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type='submit'
+                                        className='p-1 rounded-md bg-blue-600 text-white hover:cursor-pointer'
+                                    >
+                                        Update
+                                    </Button>
+                                </div>
+                            </Card>
+                        </fetcher.Form>
+                    </div>
+                </div>
+
+            )
+            }
             <div className="flex items-center gap-x-4 justify-between">
                 <h2 className="text-lg font-medium text-gray-800 dark:text-white">
                     Categories
@@ -174,33 +226,38 @@ function Categories({ loaderData }: Route.ComponentProps) {
 
                                             <td className="px-4 py-4 text-sm whitespace-nowrap">
                                                 <div className="flex items-center gap-x-6">
-                                                    <fetcher.Form method='post'>
-                                                        <input type="hidden" name='action' value="edit_this_prod" />
-                                                        <button className="text-gray-500 transition-colors duration-200 dark:hover:text-yellow-500 dark:text-gray-300 hover:text-yellow-500 focus:outline-none"
-                                                            type='submit' name='prodId' value={cat.id}>
-                                                            <svg
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                                fill="none"
-                                                                viewBox="0 0 24 24"
-                                                                strokeWidth="1.5"
-                                                                stroke="currentColor"
-                                                                className="w-5 h-5"
-                                                            >
-                                                                <path
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-                                                                />
-                                                            </svg>
-                                                        </button>
-                                                    </fetcher.Form>
+                                                    <input type="hidden" name='action' value="edit_this_cat" />
+                                                    <button className="text-gray-500 transition-colors duration-200 dark:hover:text-yellow-500 dark:text-gray-300 hover:text-yellow-500 focus:outline-none"
+                                                        type='submit' name='cat_Id' value={cat.id}
+                                                        onClick={() => {
+                                                            setCategoryUpdaterOpen(true);
+                                                            setSelectedId(cat.id)
+                                                            setcategoryNameToUpdate(cat.name)
+                                                        }}>
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            strokeWidth="1.5"
+                                                            stroke="currentColor"
+                                                            className="w-5 h-5"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                                                            />
+                                                        </svg>
+                                                    </button>
+
                                                     <fetcher.Form method='post' >
 
 
                                                         <button className="text-gray-500 transition-colors duration-200 dark:hover:text-red-500 dark:text-gray-300 hover:text-red-500 focus:outline-none"
                                                             type="button"
                                                             onClick={() => {
-                                                                console.log("delete clicked")
+                                                                //console.log
+                                                                ("delete clicked")
                                                                 setSelectedId(cat.id);
                                                                 setConfirmOpen(true);
                                                             }}
@@ -235,5 +292,6 @@ function Categories({ loaderData }: Route.ComponentProps) {
         </section >
     )
 }
-
-export default Categories
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+    return <CategoryError error={error} />
+} 

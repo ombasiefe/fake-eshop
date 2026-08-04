@@ -3,10 +3,12 @@ import { Form } from 'react-router'
 import { useEffect, useState } from 'react';
 import { MdDeleteOutline } from 'react-icons/md';
 import type { Route } from './+types/OrderForm';
-import { Resend } from 'resend';
-import { getSession } from '~/session.server';
+import { getSession, getUserId } from '~/lib/session.server';
 import { redirect } from 'react-router';
-import { prisma } from '~/db.server';
+import { HiShoppingCart } from 'react-icons/hi';
+import { Button } from 'flowbite-react';
+import { sendEmail } from '~/lib/mailer.server';
+import { addOrders } from '~/lib/db.server';
 export
     type Props = {}
 type CartItem = {
@@ -17,8 +19,7 @@ type CartItem = {
     quantity: number;
 };
 export async function loader({ request }: Route.LoaderArgs) {
-    const sesion = await getSession(request.headers.get("Cookie"))
-    const userId = sesion.get("userId")
+    const userId = await getUserId(request)
     if (!userId) {
         return redirect('/login');
     }
@@ -26,6 +27,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export async function action({ request }: Route.ActionArgs) {
+
     const formData = await request.formData();
     const email = formData.get('email') as string;
     const first_name = formData.get('first_name') as string;
@@ -34,36 +36,29 @@ export async function action({ request }: Route.ActionArgs) {
     const address = formData.get("address") as string;
     const postal_code = formData.get("postal_code") as string
     const total_price = formData.get("total_price") as string
+
     const cart = JSON.parse(formData.get("cart") as string) as CartItem[]
-    //console.log(email, first_name, last_name, phone, total_price)
-    const resend = new Resend(process.env.RESEND_API_KEY)
+    ////console.log(email, first_name, last_name, phone, total_price)
     const session = await getSession(request.headers.get('Cookie'));
     const userId = Number(session.get('userId'))
-    try {
-        const new_order = await prisma.order.create({
-            data: {
-                email,
-                tel: phone,
-                userId: userId,
-                address,
-                firstName: first_name,
-                lastName: last_name,
-                postalCode: postal_code,
-                items: {
-                    create: cart.map(item => ({
-                        productId: item.productId,
-                        quantity: item.quantity,
-                        price: item.productPrice
-                    }))
-                }
-            }
-        })
-        if (new_order) {
-            console.log('New order added successfully !')
-        }
-        const productRows = cart
-            .map(
-                (item) => `
+
+    let new_order: any;
+
+    new_order = await addOrders({
+        email: email, tel: phone, userId: userId, address: address, firstName: first_name, lastName: last_name, postalCode: postal_code,
+        items: cart.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.productPrice
+        }))
+
+    })
+
+    //console.log(new_order)
+
+    const productRows = cart
+        .map(
+            (item) => `
       <tr>
         <td>${item.productTitle}</td>
         <td style="text-align:center;">${item.quantity}</td>
@@ -71,12 +66,15 @@ export async function action({ request }: Route.ActionArgs) {
         <td style="text-align:right;">€${(item.productPrice * item.quantity).toFixed(2)}</td>
       </tr>
     `
-            )
-            .join("");
-        await resend.emails.send({
-            from: "onboarding@resend.dev",
-            to: "efe127652@gmail.com",
+        )
+        .join("");
+    try {
+
+        // console.log(new_order)
+        await sendEmail("resend", {
+            to: String(process.env.RESEND_TO),
             subject: `🛒 New Order from ${first_name} ${last_name}`,
+            text: 'A new order Received',
             html: `
 <!DOCTYPE html>
 <html>
@@ -220,11 +218,104 @@ Order generated from your webshop.
 </body>
 </html>
 `,
-        });
+        })
+    } catch (e) {
+        console.error('An error occured while sending the order info email to admin !', e);
+    }
+    try {
+        await sendEmail("smtp", {
+            to: email,
+            subject: `Order Confirmed - #${new_order.id}`,
+            text: `Hi ${first_name}, thank you for your order #${new_order.id}! Total: ${Number(total_price).toFixed(2)}€`,
+            html: `<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Order Confirmation</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+            
+            <!-- Main Wrapper -->
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 40px 10px;">
+                <tr>
+                    <td align="center">
+                        
+                        <!-- Container Card -->
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                            
+                            <!-- Header / Banner -->
+                            <tr>
+                                <td style="background-color: #2563eb; padding: 32px 32px 28px 32px; text-align: left;">
+                                    <div style="font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; margin-bottom: 12px;">
+                                        OURA SHOP
+                                    </div>
+                                    <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #ffffff; line-height: 1.3;">
+                                        Thank you for your order!
+                                    </h1>
+                                    <p style="margin: 8px 0 0 0; font-size: 15px; color: #bfdbfe;">
+                                        Hi ${first_name}, we've received order <strong style="color: #ffffff;">#${new_order.id}</strong> and are getting it ready.
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <!-- Content Area -->
+                            <tr>
+                                <td style="padding: 32px;">
+                                    
+                                    <!-- Order Summary Header -->
+                                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 12px;">
+                                        Order Summary
+                                    </div>
+
+                                    <!-- Items Table -->
+                                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
+                                        ${productRows}
+                                    </table>
+
+                                    <!-- Totals Box -->
+                                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border-radius: 8px; padding: 16px;">
+                                        <tr>
+                                            <td style="font-size: 15px; font-weight: 700; color: #0f172a;">
+                                                Total Paid
+                                            </td>
+                                            <td style="font-size: 18px; font-weight: 800; color: #2563eb; text-align: right;">
+                                                ${Number(total_price).toFixed(2)}€
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <!-- Divider -->
+                                    <div style="border-top: 1px solid #e2e8f0; margin: 28px 0 20px 0;"></div>
+
+                                    <!-- Footer / Support Note -->
+                                    <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5; text-align: center;">
+                                        Have questions about your purchase? Simply reply directly to this email and our team will be happy to help.
+                                    </p>
+
+                                </td>
+                            </tr>
+
+                            <!-- Sub-Footer -->
+                            <tr>
+                                <td style="background-color: #f1f5f9; padding: 16px 32px; text-align: center; font-size: 12px; color: #94a3b8;">
+                                    © ${new Date().getFullYear()} Oura Shop. All rights reserved.
+                                </td>
+                            </tr>
+
+                        </table>
+
+                    </td>
+                </tr>
+            </table>
+
+        </body>
+        </html>
+ `,
+        })
 
         return redirect("/products?success=true")
     } catch (eror) {
-
         console.error("Error while sending the email:", eror)
     }
 }
@@ -350,125 +441,135 @@ function OrderForm({ actionData }: Route.ComponentProps) {
                             </div>
                         ))
                     )}
-                    <Form method='post' className="max-w-md mx-auto">
-                        <input type="hidden" name="cart" value={JSON.stringify(cartItems)} />
-                        <div>
-                            <input type="hidden" name='total_price' value={totalPrice} />
-                            <h2>Total: <span className='text-2xl' >{totalPrice.toFixed(2)}€</span> </h2>
+                    {cartItems.length == 0 ? (
+                        <div className='flex flex-col justify-center items-center gap-1'>
+                            <p className='p-2 bg-white text-black rounded-md '>Cart is empty, there is no item to be ordered !</p>
+                            <Button className='w-max' href='/products' style={{ backgroundColor: "#AD9471" }}>
+                                <HiShoppingCart className='me-2 h-4 w-4' />
+                                Continue Shopping
+                            </Button>
                         </div>
+                    ) : (
+                        <Form method='post' className="max-w-md mx-auto">
+                            <input type="hidden" name="cart" value={JSON.stringify(cartItems)} />
+                            <div>
+                                <input type="hidden" name='total_price' value={totalPrice} />
+                                <h2>Total: <span className='text-2xl' >{totalPrice.toFixed(2)}€</span> </h2>
+                            </div>
 
-                        <div className="relative z-0 w-full mb-5 group">
-                            <input
-                                type="email"
-                                name="email"
-                                id="floating_email"
-                                className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
-                                placeholder=" "
-                                required
-                            />
-                            <label
-                                htmlFor="email"
-                                className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
+                            <div className="relative z-0 w-full mb-5 group">
+                                <input
+                                    type="email"
+                                    name="email"
+                                    id="floating_email"
+                                    className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                                    placeholder=" "
+                                    required
+                                />
+                                <label
+                                    htmlFor="email"
+                                    className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
+                                >
+                                    Email address
+                                </label>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 md:gap-6">
+                                <div className="relative z-0 w-full mb-5 group">
+                                    <input
+                                        type="text"
+                                        name="first_name"
+                                        id="floating_first_name"
+                                        className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                                        placeholder=" "
+                                        required
+                                    />
+                                    <label
+                                        htmlFor="first_name"
+                                        className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
+                                    >
+                                        First name
+                                    </label>
+                                </div>
+                                <div className="relative z-0 w-full mb-5 group">
+                                    <input
+                                        type="text"
+                                        name="last_name"
+                                        id="floating_last_name"
+                                        className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                                        placeholder=" "
+                                        required
+                                    />
+                                    <label
+                                        htmlFor="last_name"
+                                        className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
+                                    >
+                                        Last name
+                                    </label>
+                                </div>
+                            </div>
+                            <div className="grid md:grid-cols-2 md:gap-6">
+                                <div className="relative z-0 w-full mb-5 group">
+                                    <input
+                                        type="tel"
+                                        pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+                                        name="phone"
+                                        id="floating_phone"
+                                        className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                                        placeholder=" "
+                                        required
+                                    />
+                                    <label
+                                        htmlFor="phone"
+                                        className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
+                                    >
+                                        Phone number
+                                    </label>
+                                </div>
+                                <div className="relative z-0 w-full mb-5 group">
+                                    <input
+                                        type="text"
+                                        name="address"
+                                        id="floating_address"
+                                        className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                                        placeholder=" "
+                                        required
+                                    />
+                                    <label
+                                        htmlFor="address"
+                                        className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
+                                    >
+                                        Adress
+                                    </label>
+                                </div>
+                                <div className="relative z-0 w-full mb-5 group">
+                                    <input
+                                        type="String"
+                                        accept='{0-9}'
+                                        name="postal_code"
+                                        id="floating_postal_code"
+                                        className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                                        placeholder=" "
+                                        required
+                                    />
+                                    <label
+                                        htmlFor="postal_code"
+                                        className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
+                                    >
+                                        Postal Code
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="text-white bg-blue-700 box-border border border-transparent text-sm px-4 py-2.5  rounded-md cursor-pointer "
+                                style={{ backgroundColor: "#AD9471" }}
                             >
-                                Email address
-                            </label>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 md:gap-6">
-                            <div className="relative z-0 w-full mb-5 group">
-                                <input
-                                    type="text"
-                                    name="first_name"
-                                    id="floating_first_name"
-                                    className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
-                                    placeholder=" "
-                                    required
-                                />
-                                <label
-                                    htmlFor="first_name"
-                                    className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
-                                >
-                                    First name
-                                </label>
-                            </div>
-                            <div className="relative z-0 w-full mb-5 group">
-                                <input
-                                    type="text"
-                                    name="last_name"
-                                    id="floating_last_name"
-                                    className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
-                                    placeholder=" "
-                                    required
-                                />
-                                <label
-                                    htmlFor="last_name"
-                                    className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
-                                >
-                                    Last name
-                                </label>
-                            </div>
-                        </div>
-                        <div className="grid md:grid-cols-2 md:gap-6">
-                            <div className="relative z-0 w-full mb-5 group">
-                                <input
-                                    type="tel"
-                                    pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
-                                    name="phone"
-                                    id="floating_phone"
-                                    className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
-                                    placeholder=" "
-                                    required
-                                />
-                                <label
-                                    htmlFor="phone"
-                                    className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
-                                >
-                                    Phone number
-                                </label>
-                            </div>
-                            <div className="relative z-0 w-full mb-5 group">
-                                <input
-                                    type="text"
-                                    name="address"
-                                    id="floating_address"
-                                    className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
-                                    placeholder=" "
-                                    required
-                                />
-                                <label
-                                    htmlFor="address"
-                                    className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
-                                >
-                                    Adress
-                                </label>
-                            </div>
-                            <div className="relative z-0 w-full mb-5 group">
-                                <input
-                                    type="String"
-                                    accept='{0-9}'
-                                    name="postal_code"
-                                    id="floating_postal_code"
-                                    className="block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
-                                    placeholder=" "
-                                    required
-                                />
-                                <label
-                                    htmlFor="postal_code"
-                                    className="absolute text-sm text-body duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
-                                >
-                                    Postal Code
-                                </label>
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="text-white bg-blue-700 box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-md
-                             text-sm px-4 py-2.5 focus:outline-none cursor-pointero "
-                        >
-                            Submit
-                        </button>
-                    </Form>
+                                Submit
+                            </button>
+                        </Form>
+                    )}
                 </div>
             </div>
         </div>
